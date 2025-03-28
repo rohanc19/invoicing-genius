@@ -1,4 +1,3 @@
-
 import { Invoice } from "../types/invoice";
 import { calculateProductTotal, calculateSubtotal, calculateTotal, calculateTotalDiscount, calculateTotalTax, formatCurrency } from "./calculations";
 import jsPDF from "jspdf";
@@ -11,7 +10,16 @@ declare module "jspdf" {
   }
 }
 
-export const generateInvoicePDF = (invoice: Invoice) => {
+// Export this function for use in ActionButtons component
+export const exportToPDF = (invoice: Invoice, download: boolean = false) => {
+  if (download) {
+    return downloadInvoicePDF(invoice);
+  } else {
+    return printInvoicePDF(invoice);
+  }
+};
+
+const generateInvoicePDF = (invoice: Invoice) => {
   const doc = new jsPDF();
   
   // Set up document properties
@@ -188,9 +196,23 @@ export const generateInvoicePDF = (invoice: Invoice) => {
   return doc;
 };
 
-export const downloadInvoicePDF = (invoice: Invoice) => {
+const downloadInvoicePDF = (invoice: Invoice) => {
   const doc = generateInvoicePDF(invoice);
   doc.save(`Invoice_${invoice.details.invoiceNumber}.pdf`);
+};
+
+const printInvoicePDF = (invoice: Invoice) => {
+  const doc = generateInvoicePDF(invoice);
+  const blob = doc.output("blob");
+  const url = URL.createObjectURL(blob);
+  const printWindow = window.open(url);
+  
+  if (printWindow) {
+    printWindow.onload = () => {
+      printWindow.print();
+      URL.revokeObjectURL(url);
+    };
+  }
 };
 
 export const shareInvoicePDF = async (invoice: Invoice) => {
