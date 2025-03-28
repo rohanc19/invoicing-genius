@@ -9,7 +9,116 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      invoice_products: {
+        Row: {
+          discount: number | null
+          id: string
+          invoice_id: string
+          name: string
+          price: number
+          quantity: number
+          tax: number | null
+        }
+        Insert: {
+          discount?: number | null
+          id?: string
+          invoice_id: string
+          name: string
+          price: number
+          quantity: number
+          tax?: number | null
+        }
+        Update: {
+          discount?: number | null
+          id?: string
+          invoice_id?: string
+          name?: string
+          price?: number
+          quantity?: number
+          tax?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_products_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          client_address: string | null
+          client_email: string | null
+          client_name: string
+          created_at: string | null
+          date: string | null
+          due_date: string | null
+          id: string
+          invoice_number: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          client_address?: string | null
+          client_email?: string | null
+          client_name: string
+          created_at?: string | null
+          date?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_number: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          client_address?: string | null
+          client_email?: string | null
+          client_name?: string
+          created_at?: string | null
+          date?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_number?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          company_address: string | null
+          company_email: string | null
+          company_logo: string | null
+          company_name: string | null
+          company_phone: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_address?: string | null
+          company_email?: string | null
+          company_logo?: string | null
+          company_name?: string | null
+          company_phone?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_address?: string | null
+          company_email?: string | null
+          company_logo?: string | null
+          company_name?: string | null
+          company_phone?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

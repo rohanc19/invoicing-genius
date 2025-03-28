@@ -1,20 +1,13 @@
 
 import React, { useState } from "react";
-import { Invoice } from "../types/invoice";
 import { Button } from "@/components/ui/button";
-import { 
-  Download, 
-  Share2, 
-  FileSpreadsheet, 
-  FilePlus,
-  Loader2
-} from "lucide-react";
-import { 
-  downloadInvoicePDF, 
-  shareInvoicePDF 
-} from "../utils/pdfUtils";
+import { Printer, Save, FileText, Download } from "lucide-react";
+import { Invoice } from "../types/invoice";
+import { exportToPDF } from "../utils/pdfUtils";
 import { exportToExcel } from "../utils/exportUtils";
-import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
 
 interface ActionButtonsProps {
   invoice: Invoice;
@@ -22,89 +15,111 @@ interface ActionButtonsProps {
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({ invoice, disabled }) => {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const { user } = useAuth();
+  const [isSaving, setIsSaving] = useState(false);
   
-  const handleDownloadPDF = async () => {
-    setIsGenerating(true);
+  const handleSave = async () => {
+    if (!user) {
+      toast({
+        title: "Not authenticated",
+        description: "You must be logged in to save invoices",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
-      await downloadInvoicePDF(invoice);
-      toast.success("Invoice PDF downloaded successfully");
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      toast.error("Failed to generate PDF");
+      setIsSaving(true);
+      
+      // Insert invoice
+      const { data: invoiceData, error: invoiceError } = await supabase
+        .from('invoices')
+        .insert({
+          user_id: user.id,
+          invoice_number: invoice.details.invoiceNumber,
+          client_name: invoice.details.clientName,
+          client_email: invoice.details.clientEmail,
+          client_address: invoice.details.clientAddress,
+          date: invoice.details.date,
+          due_date: invoice.details.dueDate,
+          notes: invoice.notes,
+        })
+        .select()
+        .single();
+        
+      if (invoiceError) throw invoiceError;
+      
+      // Insert products
+      const productsToInsert = invoice.products.map(product => ({
+        invoice_id: invoiceData.id,
+        name: product.name,
+        quantity: product.quantity,
+        price: product.price,
+        tax: product.tax,
+        discount: product.discount,
+      }));
+      
+      const { error: productsError } = await supabase
+        .from('invoice_products')
+        .insert(productsToInsert);
+        
+      if (productsError) throw productsError;
+      
+      toast({
+        title: "Invoice saved",
+        description: `Invoice ${invoice.details.invoiceNumber} has been saved`,
+      });
+      
+    } catch (error: any) {
+      toast({
+        title: "Error saving invoice",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
-      setIsGenerating(false);
+      setIsSaving(false);
     }
   };
-  
-  const handleSharePDF = async () => {
-    setIsGenerating(true);
-    try {
-      const shared = await shareInvoicePDF(invoice);
-      if (shared) {
-        toast.success("Invoice shared successfully");
-      }
-    } catch (error) {
-      console.error("Error sharing PDF:", error);
-      toast.error("Failed to share invoice");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-  
-  const handleExportToExcel = () => {
-    try {
-      exportToExcel(invoice);
-      toast.success("Invoice exported to Excel successfully");
-    } catch (error) {
-      console.error("Error exporting to Excel:", error);
-      toast.error("Failed to export to Excel");
-    }
-  };
-  
+
   return (
-    <div className="flex flex-wrap gap-3 justify-center md:justify-end">
-      <Button
-        variant="outline"
-        className="gap-2"
-        onClick={handleExportToExcel}
-        disabled={disabled || isGenerating}
+    <div className="mt-8 flex flex-wrap gap-4 justify-center md:justify-end">
+      <Button 
+        variant="outline" 
+        disabled={disabled} 
+        onClick={() => exportToPDF(invoice)}
+        className="flex items-center gap-2"
       >
-        <FileSpreadsheet className="h-4 w-4" />
-        Export to Excel
+        <Printer className="h-5 w-5" />
+        <span>Print</span>
       </Button>
       
-      <Button
-        variant="outline"
-        className="gap-2"
-        onClick={handleSharePDF}
-        disabled={disabled || isGenerating}
+      <Button 
+        variant="outline" 
+        disabled={disabled} 
+        onClick={() => exportToExcel(invoice)}
+        className="flex items-center gap-2"
       >
-        <Share2 className="h-4 w-4" />
-        Share
+        <FileText className="h-5 w-5" />
+        <span>Export to Excel</span>
       </Button>
       
-      <Button
-        variant="outline"
-        className="gap-2"
-        onClick={handleDownloadPDF}
-        disabled={disabled || isGenerating}
+      <Button 
+        variant="outline" 
+        disabled={disabled} 
+        onClick={() => exportToPDF(invoice, true)}
+        className="flex items-center gap-2"
       >
-        <Download className="h-4 w-4" />
-        Download PDF
+        <Download className="h-5 w-5" />
+        <span>Download PDF</span>
       </Button>
       
-      <Button
-        className="gap-2"
-        onClick={handleDownloadPDF}
-        disabled={disabled || isGenerating}
+      <Button 
+        disabled={disabled || isSaving} 
+        onClick={handleSave}
+        className="flex items-center gap-2"
       >
-        {isGenerating ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <FilePlus className="h-4 w-4" />
-        )}
-        Generate Invoice
+        <Save className="h-5 w-5" />
+        <span>{isSaving ? "Saving..." : "Save Invoice"}</span>
       </Button>
     </div>
   );

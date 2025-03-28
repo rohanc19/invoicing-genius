@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { InvoiceDetails, Product, Invoice } from "../types/invoice";
 import InvoiceHeader from "../components/InvoiceHeader";
@@ -8,10 +8,19 @@ import InvoiceSummary from "../components/InvoiceSummary";
 import ActionButtons from "../components/ActionButtons";
 import { 
   File, 
-  ReceiptText
+  ReceiptText,
+  LogOut,
+  User
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const Index = () => {
+  const { user, signOut } = useAuth();
+  const [userProfile, setUserProfile] = useState<any>(null);
+  
   // Invoice details state
   const [details, setDetails] = useState<InvoiceDetails>({
     invoiceNumber: `INV-${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
@@ -40,6 +49,45 @@ const Index = () => {
   // Notes state
   const [notes, setNotes] = useState<string>("");
 
+  // Fetch user profile data
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        if (!user) return;
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+          
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          setUserProfile(data);
+          
+          // Pre-fill company details if available
+          setDetails(prev => ({
+            ...prev,
+            yourCompany: data.company_name || "",
+            yourEmail: data.company_email || user.email || "",
+            yourAddress: data.company_address || "",
+          }));
+        }
+      } catch (error: any) {
+        toast({
+          title: "Error fetching profile",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    };
+    
+    fetchUserProfile();
+  }, [user]);
+
   // Compute if form is valid
   const isFormValid = 
     details.yourCompany.trim() !== "" && 
@@ -57,9 +105,27 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
       <div className="bg-primary text-white p-4 mb-8">
-        <div className="container mx-auto px-4 flex items-center gap-2">
-          <ReceiptText className="h-6 w-6" />
-          <h1 className="text-xl font-bold">Invoicing Genius</h1>
+        <div className="container mx-auto px-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ReceiptText className="h-6 w-6" />
+            <h1 className="text-xl font-bold">Invoicing Genius</h1>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              <span className="text-sm hidden md:inline">{userProfile?.full_name || user?.email}</span>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={signOut}
+              className="text-white hover:text-white hover:bg-primary/80"
+            >
+              <LogOut className="h-5 w-5 mr-2" />
+              <span className="hidden md:inline">Sign Out</span>
+            </Button>
+          </div>
         </div>
       </div>
       
