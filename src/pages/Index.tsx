@@ -10,12 +10,14 @@ import {
   File, 
   ReceiptText,
   LogOut,
-  User
+  User,
+  Building
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   const { user, signOut } = useAuth();
@@ -112,10 +114,23 @@ const Index = () => {
           </div>
           
           <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="text-white hover:text-white hover:bg-primary/80"
+            >
+              <Link to="/profile" className="flex items-center gap-2">
+                <Building className="h-5 w-5" />
+                <span className="hidden md:inline">Company Profile</span>
+              </Link>
+            </Button>
+            
             <div className="flex items-center gap-2">
               <User className="h-5 w-5" />
               <span className="text-sm hidden md:inline">{userProfile?.full_name || user?.email}</span>
             </div>
+            
             <Button 
               variant="ghost" 
               size="sm" 
