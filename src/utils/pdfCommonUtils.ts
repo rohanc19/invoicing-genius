@@ -239,7 +239,7 @@ export const shareDocumentViaWhatsApp = async (
     tempLink.click();
     document.body.removeChild(tempLink);
     
-    // Show user instructions toast with more detailed steps
+    // Show user instructions toast
     toast({
       title: "PDF Downloaded",
       description: "1. The PDF has been downloaded. 2. Click 'Continue to WhatsApp' to open WhatsApp. 3. Attach the PDF manually using the clip icon.",
@@ -271,15 +271,10 @@ export const shareDocumentViaWhatsApp = async (
       toast({
         title: "Continue to WhatsApp",
         description: "PDF downloaded. Click below to open WhatsApp and then attach the PDF manually.",
-        action: (
-          <button 
-            id={continueToastId}
-            onClick={() => window.open(`https://wa.me/?text=${message}`, '_blank')}
-            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-xs"
-          >
-            Continue to WhatsApp
-          </button>
-        ),
+        action: {
+          label: "Continue to WhatsApp",
+          onClick: () => window.open(`https://wa.me/?text=${message}`, '_blank')
+        },
         duration: 10000,
       });
     }, 1000);
