@@ -16,6 +16,7 @@ import CreateEstimate from "./pages/CreateEstimate";
 import EstimateView from "./pages/EstimateView";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import OfflineNotice from "./components/OfflineNotice";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <OfflineNotice />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             
