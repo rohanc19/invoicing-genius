@@ -1,27 +1,12 @@
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { 
-  Printer, 
-  Save, 
-  FileText, 
-  Download, 
-  Share, 
-  MessageCircle, 
-  Mail 
-} from "lucide-react";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import React from "react";
 import { Invoice } from "../types/invoice";
 import { exportToPDF, shareInvoicePDF, shareInvoiceViaWhatsApp, shareInvoiceViaEmail } from "../utils/pdfUtils";
 import { exportToExcel } from "../utils/exportUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import DocumentActionButtons from "./DocumentActionButtons";
 
 interface ActionButtonsProps {
   invoice: Invoice;
@@ -30,10 +15,6 @@ interface ActionButtonsProps {
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({ invoice, disabled }) => {
   const { user } = useAuth();
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
-  const [isWhatsAppSharing, setIsWhatsAppSharing] = useState(false);
-  const [isEmailSharing, setIsEmailSharing] = useState(false);
   
   const handleSave = async () => {
     if (!user) {
@@ -45,185 +26,64 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ invoice, disabled }) => {
       return;
     }
     
-    try {
-      setIsSaving(true);
+    // Insert invoice
+    const { data: invoiceData, error: invoiceError } = await supabase
+      .from('invoices')
+      .insert({
+        user_id: user.id,
+        invoice_number: invoice.details.invoiceNumber,
+        client_name: invoice.details.clientName,
+        client_email: invoice.details.clientEmail,
+        client_address: invoice.details.clientAddress,
+        your_company: invoice.details.yourCompany,
+        your_email: invoice.details.yourEmail,
+        your_address: invoice.details.yourAddress,
+        date: invoice.details.date,
+        due_date: invoice.details.dueDate,
+        notes: invoice.notes,
+        status: 'unpaid',
+        is_draft: false
+      })
+      .select()
+      .single();
       
-      // Insert invoice
-      const { data: invoiceData, error: invoiceError } = await supabase
-        .from('invoices')
-        .insert({
-          user_id: user.id,
-          invoice_number: invoice.details.invoiceNumber,
-          client_name: invoice.details.clientName,
-          client_email: invoice.details.clientEmail,
-          client_address: invoice.details.clientAddress,
-          your_company: invoice.details.yourCompany,
-          your_email: invoice.details.yourEmail,
-          your_address: invoice.details.yourAddress,
-          date: invoice.details.date,
-          due_date: invoice.details.dueDate,
-          notes: invoice.notes,
-          status: 'unpaid',
-          is_draft: false
-        })
-        .select()
-        .single();
-        
-      if (invoiceError) throw invoiceError;
+    if (invoiceError) throw invoiceError;
+    
+    // Insert products
+    const productsToInsert = invoice.products.map(product => ({
+      invoice_id: invoiceData.id,
+      name: product.name,
+      quantity: product.quantity,
+      price: product.price,
+      tax: product.tax,
+      discount: product.discount,
+    }));
+    
+    const { error: productsError } = await supabase
+      .from('invoice_products')
+      .insert(productsToInsert);
       
-      // Insert products
-      const productsToInsert = invoice.products.map(product => ({
-        invoice_id: invoiceData.id,
-        name: product.name,
-        quantity: product.quantity,
-        price: product.price,
-        tax: product.tax,
-        discount: product.discount,
-      }));
-      
-      const { error: productsError } = await supabase
-        .from('invoice_products')
-        .insert(productsToInsert);
-        
-      if (productsError) throw productsError;
-      
-      toast({
-        title: "Invoice saved",
-        description: `Invoice ${invoice.details.invoiceNumber} has been saved`,
-      });
-      
-    } catch (error: any) {
-      toast({
-        title: "Error saving invoice",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleShare = async () => {
-    setIsSharing(true);
-    try {
-      await shareInvoicePDF(invoice);
-    } catch (error) {
-      toast({
-        title: "Sharing failed",
-        description: "Could not share the invoice. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSharing(false);
-    }
-  };
-
-  const handleWhatsAppShare = async () => {
-    setIsWhatsAppSharing(true);
-    try {
-      await shareInvoiceViaWhatsApp(invoice);
-    } catch (error) {
-      toast({
-        title: "WhatsApp sharing failed",
-        description: "Could not share via WhatsApp. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsWhatsAppSharing(false);
-    }
-  };
-
-  const handleEmailShare = () => {
-    setIsEmailSharing(true);
-    try {
-      window.location.href = shareInvoiceViaEmail(invoice);
-    } catch (error) {
-      toast({
-        title: "Email sharing failed",
-        description: "Could not share via email. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsEmailSharing(false);
-    }
+    if (productsError) throw productsError;
+    
+    toast({
+      title: "Invoice saved",
+      description: `Invoice ${invoice.details.invoiceNumber} has been saved`,
+    });
   };
 
   return (
-    <div className="mt-8 flex flex-wrap gap-4 justify-center md:justify-end">
-      <Button 
-        variant="outline" 
-        disabled={disabled} 
-        onClick={() => exportToPDF(invoice)}
-        className="flex items-center gap-2"
-      >
-        <Printer className="h-5 w-5" />
-        <span>Print</span>
-      </Button>
-      
-      <Button 
-        variant="outline" 
-        disabled={disabled} 
-        onClick={() => exportToExcel(invoice)}
-        className="flex items-center gap-2"
-      >
-        <FileText className="h-5 w-5" />
-        <span>Export to Excel</span>
-      </Button>
-      
-      <Button 
-        variant="outline" 
-        disabled={disabled} 
-        onClick={() => exportToPDF(invoice, true)}
-        className="flex items-center gap-2"
-      >
-        <Download className="h-5 w-5" />
-        <span>Download PDF</span>
-      </Button>
-      
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="outline" 
-            disabled={disabled || isSharing || isWhatsAppSharing || isEmailSharing}
-            className="flex items-center gap-2"
-          >
-            <Share className="h-5 w-5" />
-            <span>{isSharing || isWhatsAppSharing || isEmailSharing ? "Sharing..." : "Share"}</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          {navigator.share && (
-            <DropdownMenuItem onClick={handleShare} disabled={isSharing || isWhatsAppSharing || isEmailSharing}>
-              <Share className="h-4 w-4 mr-2" />
-              Share
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem 
-            onClick={handleWhatsAppShare} 
-            disabled={isSharing || isWhatsAppSharing || isEmailSharing}
-          >
-            <MessageCircle className="h-4 w-4 mr-2" />
-            {isWhatsAppSharing ? "Processing..." : "WhatsApp"}
-          </DropdownMenuItem>
-          <DropdownMenuItem 
-            onClick={handleEmailShare} 
-            disabled={isSharing || isWhatsAppSharing || isEmailSharing}
-          >
-            <Mail className="h-4 w-4 mr-2" />
-            {isEmailSharing ? "Opening Email..." : "Email"}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      
-      <Button 
-        disabled={disabled || isSaving} 
-        onClick={handleSave}
-        className="flex items-center gap-2"
-      >
-        <Save className="h-5 w-5" />
-        <span>{isSaving ? "Saving..." : "Save Invoice"}</span>
-      </Button>
-    </div>
+    <DocumentActionButtons
+      document={invoice}
+      documentType="invoice"
+      disabled={disabled}
+      onPrint={() => exportToPDF(invoice)}
+      onDownload={() => exportToPDF(invoice, true)}
+      onShare={() => shareInvoicePDF(invoice)}
+      onWhatsAppShare={() => shareInvoiceViaWhatsApp(invoice)}
+      onEmailShare={() => window.location.href = shareInvoiceViaEmail(invoice)}
+      onSave={handleSave}
+      showSaveButton={true}
+    />
   );
 };
 
