@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      clients: {
+        Row: {
+          client_address: string | null
+          client_email: string | null
+          client_name: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          client_address?: string | null
+          client_email?: string | null
+          client_name: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          client_address?: string | null
+          client_email?: string | null
+          client_name?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invoice_products: {
         Row: {
           discount: number | null
@@ -57,8 +84,14 @@ export type Database = {
           due_date: string | null
           id: string
           invoice_number: string
+          is_draft: boolean | null
           notes: string | null
+          status: string | null
+          updated_at: string | null
           user_id: string
+          your_address: string | null
+          your_company: string | null
+          your_email: string | null
         }
         Insert: {
           client_address?: string | null
@@ -69,8 +102,14 @@ export type Database = {
           due_date?: string | null
           id?: string
           invoice_number: string
+          is_draft?: boolean | null
           notes?: string | null
+          status?: string | null
+          updated_at?: string | null
           user_id: string
+          your_address?: string | null
+          your_company?: string | null
+          your_email?: string | null
         }
         Update: {
           client_address?: string | null
@@ -81,8 +120,14 @@ export type Database = {
           due_date?: string | null
           id?: string
           invoice_number?: string
+          is_draft?: boolean | null
           notes?: string | null
+          status?: string | null
+          updated_at?: string | null
           user_id?: string
+          your_address?: string | null
+          your_company?: string | null
+          your_email?: string | null
         }
         Relationships: []
       }

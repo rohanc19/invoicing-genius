@@ -40,9 +40,14 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ invoice, disabled }) => {
           client_name: invoice.details.clientName,
           client_email: invoice.details.clientEmail,
           client_address: invoice.details.clientAddress,
+          your_company: invoice.details.yourCompany,
+          your_email: invoice.details.yourEmail,
+          your_address: invoice.details.yourAddress,
           date: invoice.details.date,
           due_date: invoice.details.dueDate,
           notes: invoice.notes,
+          status: 'unpaid',
+          is_draft: false
         })
         .select()
         .single();

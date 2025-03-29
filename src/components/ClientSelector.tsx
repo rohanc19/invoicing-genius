@@ -75,7 +75,7 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({
         }
         
         if (data) {
-          setClients(data);
+          setClients(data as ClientProfile[]);
         }
       } catch (error: any) {
         console.error("Error fetching clients:", error);
@@ -143,7 +143,7 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({
       
       if (data) {
         // Add new client to the local state
-        setClients(prev => [...prev, data]);
+        setClients(prev => [...prev, data as ClientProfile]);
         
         // Select the newly created client
         onClientSelect({
