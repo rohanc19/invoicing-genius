@@ -1,396 +1,599 @@
 
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/hooks/use-toast";
+import { useNavigate, useParams } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import { format } from "date-fns";
-
-// Components
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import InvoiceHeader from "@/components/InvoiceHeader";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft, Save, FileText, ReceiptText } from "lucide-react";
 import ProductList from "@/components/ProductList";
-import InvoiceSummary from "@/components/InvoiceSummary";
-import { Card, CardContent } from "@/components/ui/card";
-import CompanySelector from "@/components/CompanySelector";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { Estimate, EstimateDetails, EstimateProduct } from "@/types/estimate";
 
-// Types
-import { Product } from "@/types/invoice";
-import { EstimateDetails } from "@/types/estimate";
-
-const initialEstimateDetails: EstimateDetails = {
-  estimateNumber: `EST-${Math.floor(Math.random() * 1000) + 1}`,
-  date: format(new Date(), "yyyy-MM-dd"),
-  dueDate: format(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), "yyyy-MM-dd"), // 15 days from now
-  clientName: "",
-  clientEmail: "",
-  clientAddress: "",
-  yourCompany: "",
-  yourEmail: "",
-  yourAddress: "",
-};
-
-const initialProducts: Product[] = [
-  {
-    id: uuidv4(),
-    name: "",
-    quantity: 1,
-    price: 0,
-    tax: 0,
-    discount: 0,
-  },
-];
+interface Product {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
+  tax: number;
+  discount: number;
+}
 
 const CreateEstimate = () => {
-  const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isLoadingEstimate, setIsLoadingEstimate] = useState<boolean>(false);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [estimateDetails, setEstimateDetails] = useState<EstimateDetails>(initialEstimateDetails);
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [notes, setNotes] = useState<string>("");
-  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const { id } = useParams<{ id: string }>();
+  const isEditMode = !!id;
+  const { toast: uiToast } = useToast();
 
-  // If ID is provided, fetch the estimate for editing
+  const [estimateDetails, setEstimateDetails] = useState<EstimateDetails>({
+    estimateNumber: `EST-${Math.floor(100000 + Math.random() * 900000)}`,
+    date: format(new Date(), 'yyyy-MM-dd'),
+    dueDate: format(new Date(new Date().setDate(new Date().getDate() + 14)), 'yyyy-MM-dd'),
+    clientName: "",
+    clientEmail: "",
+    clientAddress: "",
+    yourCompany: "",
+    yourEmail: "",
+    yourAddress: ""
+  });
+
+  const [products, setProducts] = useState<Product[]>([
+    {
+      id: uuidv4(),
+      name: "",
+      quantity: 1,
+      price: 0,
+      tax: 0,
+      discount: 0
+    }
+  ]);
+
+  const [notes, setNotes] = useState<string>("");
+  const [status, setStatus] = useState<string>("draft");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [hasChanges, setHasChanges] = useState<boolean>(false);
+
   useEffect(() => {
-    const fetchEstimate = async () => {
-      if (!id || !user) return;
-      
-      setIsLoadingEstimate(true);
+    if (isEditMode && id) {
+      fetchEstimate(id);
+    }
+    
+    // If user profile exists, populate your company details
+    const fetchUserProfile = async () => {
       try {
-        // Fetch the estimate
-        const { data: estimate, error: estimateError } = await supabase
-          .from("estimates")
-          .select("*")
-          .eq("id", id)
-          .eq("user_id", user.id)
+        if (!user) return;
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
           .single();
+          
+        if (error) throw error;
         
-        if (estimateError) throw estimateError;
+        if (data) {
+          setEstimateDetails(prevState => ({
+            ...prevState,
+            yourCompany: data.company_name || "",
+            yourEmail: data.email || user.email || "",
+            yourAddress: data.address || ""
+          }));
+        }
+      } catch (error: any) {
+        toast.error("Error fetching profile", {
+          description: error.message,
+        });
+      }
+    };
+    
+    fetchUserProfile();
+  }, [user, id, isEditMode]);
+
+  const fetchEstimate = async (estimateId: string) => {
+    try {
+      setIsLoading(true);
+      
+      const { data: estimateData, error: estimateError } = await supabase
+        .from('estimates')
+        .select('*')
+        .eq('id', estimateId)
+        .single();
+      
+      if (estimateError) throw estimateError;
+      
+      if (estimateData) {
+        setEstimateDetails({
+          estimateNumber: estimateData.estimate_number,
+          date: format(new Date(estimateData.date), 'yyyy-MM-dd'),
+          dueDate: estimateData.due_date ? format(new Date(estimateData.due_date), 'yyyy-MM-dd') : '',
+          clientName: estimateData.client_name,
+          clientEmail: estimateData.client_email || '',
+          clientAddress: estimateData.client_address || '',
+          yourCompany: estimateData.your_company || '',
+          yourEmail: estimateData.your_email || '',
+          yourAddress: estimateData.your_address || ''
+        });
         
-        // Fetch the products for this estimate
-        const { data: estimateProducts, error: productsError } = await supabase
-          .from("estimate_products")
-          .select("*")
-          .eq("estimate_id", id);
+        setNotes(estimateData.notes || '');
+        setStatus(estimateData.status || 'draft');
+        
+        const { data: productsData, error: productsError } = await supabase
+          .from('estimate_products')
+          .select('*')
+          .eq('estimate_id', estimateId);
         
         if (productsError) throw productsError;
         
-        // Update state with the fetched data
-        setEstimateDetails({
-          estimateNumber: estimate.estimate_number,
-          date: estimate.date ? format(new Date(estimate.date), "yyyy-MM-dd") : "",
-          dueDate: estimate.due_date ? format(new Date(estimate.due_date), "yyyy-MM-dd") : "",
-          clientName: estimate.client_name || "",
-          clientEmail: estimate.client_email || "",
-          clientAddress: estimate.client_address || "",
-          yourCompany: estimate.your_company || "",
-          yourEmail: estimate.your_email || "",
-          yourAddress: estimate.your_address || "",
-        });
-        
-        if (estimateProducts && estimateProducts.length > 0) {
-          setProducts(estimateProducts.map((product: any) => ({
+        if (productsData && productsData.length > 0) {
+          setProducts(productsData.map(product => ({
             id: product.id,
             name: product.name,
             quantity: product.quantity,
             price: product.price,
-            tax: product.tax || 0,
-            discount: product.discount || 0,
+            tax: product.tax,
+            discount: product.discount
           })));
         }
-        
-        setNotes(estimate.notes || "");
-        setIsEditMode(true);
-        
-      } catch (error: any) {
-        toast({
-          title: "Error fetching estimate",
-          description: error.message,
-          variant: "destructive",
-        });
-        navigate("/estimates"); // Redirect back to estimates if there's an error
-      } finally {
-        setIsLoadingEstimate(false);
       }
-    };
-    
-    fetchEstimate();
-  }, [id, user, navigate]);
+    } catch (error: any) {
+      toast.error("Error loading estimate", {
+        description: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const handleSaveEstimate = async (status: string = "draft") => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to save estimates",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (!estimateDetails.clientName) {
-      toast({
-        title: "Client information required",
-        description: "Please add client information to the estimate",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    if (products.some(product => !product.name || product.quantity <= 0)) {
-      toast({
-        title: "Invalid product data",
-        description: "Please ensure all products have a name and positive quantity",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsSaving(true);
-    
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEstimateDetails(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setHasChanges(true);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatus(value);
+    setHasChanges(true);
+  };
+
+  const handleSave = async () => {
     try {
-      // Prepare the estimate data
+      if (!user) {
+        toast.error("You must be logged in to create an estimate");
+        return;
+      }
+      
+      setIsLoading(true);
+      
       const estimateData = {
         user_id: user.id,
         estimate_number: estimateDetails.estimateNumber,
-        date: estimateDetails.date,
-        due_date: estimateDetails.dueDate,
         client_name: estimateDetails.clientName,
         client_email: estimateDetails.clientEmail,
         client_address: estimateDetails.clientAddress,
         your_company: estimateDetails.yourCompany,
         your_email: estimateDetails.yourEmail,
         your_address: estimateDetails.yourAddress,
+        date: estimateDetails.date,
+        due_date: estimateDetails.dueDate,
         notes: notes,
-        status: status,
+        status: status
       };
       
-      // For edit mode, update the existing estimate
+      let estimateId;
+      
       if (isEditMode && id) {
-        // Update the estimate
-        const { error: updateError } = await supabase
-          .from("estimates")
+        // Update existing estimate
+        const { data, error } = await supabase
+          .from('estimates')
           .update(estimateData)
-          .eq("id", id);
-        
-        if (updateError) throw updateError;
-        
-        // Delete existing products and add the new ones
-        const { error: deleteError } = await supabase
-          .from("estimate_products")
-          .delete()
-          .eq("estimate_id", id);
-        
-        if (deleteError) throw deleteError;
-        
-        // Insert the updated products
-        const productsToInsert = products.map(product => ({
-          estimate_id: id,
-          name: product.name,
-          quantity: product.quantity,
-          price: product.price,
-          tax: product.tax || 0,
-          discount: product.discount || 0,
-        }));
-        
-        const { error: insertError } = await supabase
-          .from("estimate_products")
-          .insert(productsToInsert);
-        
-        if (insertError) throw insertError;
-        
-        toast({
-          title: "Estimate updated",
-          description: `Estimate ${estimateDetails.estimateNumber} has been updated.`,
-        });
-        
-      } else {
-        // Create a new estimate
-        const { data: estimateResult, error: createError } = await supabase
-          .from("estimates")
-          .insert(estimateData)
-          .select()
+          .eq('id', id)
+          .select('id')
           .single();
+          
+        if (error) throw error;
+        estimateId = data.id;
         
-        if (createError) throw createError;
-        
-        // Insert the products for this estimate
-        const productsToInsert = products.map(product => ({
-          estimate_id: estimateResult.id,
-          name: product.name,
-          quantity: product.quantity,
-          price: product.price,
-          tax: product.tax || 0,
-          discount: product.discount || 0,
-        }));
-        
-        const { error: productsError } = await supabase
-          .from("estimate_products")
-          .insert(productsToInsert);
-        
-        if (productsError) throw productsError;
-        
-        toast({
-          title: "Estimate created",
-          description: `Estimate ${estimateDetails.estimateNumber} has been created.`,
-        });
+        // First delete all existing products
+        const { error: deleteError } = await supabase
+          .from('estimate_products')
+          .delete()
+          .eq('estimate_id', id);
+          
+        if (deleteError) throw deleteError;
+      } else {
+        // Create new estimate
+        const { data, error } = await supabase
+          .from('estimates')
+          .insert([estimateData])
+          .select('id')
+          .single();
+          
+        if (error) throw error;
+        estimateId = data.id;
       }
       
-      // Navigate back to the estimates list
-      navigate("/estimates");
+      // Insert all products
+      const productsToInsert = products.map(product => ({
+        estimate_id: estimateId,
+        name: product.name,
+        quantity: product.quantity,
+        price: product.price,
+        tax: product.tax,
+        discount: product.discount
+      }));
+      
+      const { error: productsError } = await supabase
+        .from('estimate_products')
+        .insert(productsToInsert);
+        
+      if (productsError) throw productsError;
+      
+      toast.success(isEditMode ? "Estimate updated successfully" : "Estimate created successfully");
+      setHasChanges(false);
+      
+      // Navigate to estimate view
+      navigate(`/estimate/${estimateId}`);
       
     } catch (error: any) {
-      toast({
-        title: "Error saving estimate",
+      toast.error("Error saving estimate", {
         description: error.message,
-        variant: "destructive",
       });
     } finally {
-      setIsSaving(false);
+      setIsLoading(false);
     }
   };
 
-  const handleCompanySelect = (companyDetails: { 
-    company_name: string; 
-    company_email: string; 
-    company_address: string;
-  }) => {
-    setEstimateDetails(prev => ({
-      ...prev,
-      yourCompany: companyDetails.company_name,
-      yourEmail: companyDetails.company_email,
-      yourAddress: companyDetails.company_address,
-    }));
-  };
-
-  if (isLoadingEstimate) {
-    return (
-      <div className="container mx-auto p-4 flex justify-center items-center min-h-screen">
-        <p>Loading estimate data...</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="container mx-auto p-4 pb-20">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">
-          {isEditMode ? "Edit Estimate" : "Create New Estimate"}
-        </h1>
-        <Button 
-          variant="outline" 
-          onClick={() => navigate("/estimates")}
-        >
-          Back to Estimates
-        </Button>
-      </div>
+  const handleConvertToInvoice = async () => {
+    try {
+      if (!user || !id) {
+        toast.error("You must be logged in and have a saved estimate to convert it");
+        return;
+      }
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <InvoiceHeader 
-            details={{
-              invoiceNumber: estimateDetails.estimateNumber,
-              date: estimateDetails.date,
-              dueDate: estimateDetails.dueDate,
-              clientName: estimateDetails.clientName,
-              clientEmail: estimateDetails.clientEmail,
-              clientAddress: estimateDetails.clientAddress,
-              yourCompany: estimateDetails.yourCompany,
-              yourEmail: estimateDetails.yourEmail,
-              yourAddress: estimateDetails.yourAddress,
-            }} 
-            setDetails={(details) => {
-              setEstimateDetails({
-                estimateNumber: details.invoiceNumber,
-                date: details.date,
-                dueDate: details.dueDate,
-                clientName: details.clientName,
-                clientEmail: details.clientEmail,
-                clientAddress: details.clientAddress,
-                yourCompany: details.yourCompany,
-                yourEmail: details.yourEmail,
-                yourAddress: details.yourAddress,
-              });
-            }} 
-          />
+      setIsLoading(true);
+      
+      // Create invoice from estimate data
+      const invoiceData = {
+        user_id: user.id,
+        invoice_number: `INV-${Math.floor(100000 + Math.random() * 900000)}`,
+        client_name: estimateDetails.clientName,
+        client_email: estimateDetails.clientEmail,
+        client_address: estimateDetails.clientAddress,
+        your_company: estimateDetails.yourCompany,
+        your_email: estimateDetails.yourEmail,
+        your_address: estimateDetails.yourAddress,
+        date: estimateDetails.date,
+        due_date: estimateDetails.dueDate,
+        notes: notes,
+        status: 'unpaid'
+      };
+      
+      // Insert invoice
+      const { data: invoiceData2, error: invoiceError } = await supabase
+        .from('invoices')
+        .insert([invoiceData])
+        .select('id')
+        .single();
+        
+      if (invoiceError) throw invoiceError;
+      
+      const invoiceId = invoiceData2.id;
+      
+      // Convert products to invoice products
+      const invoiceProducts = products.map(product => ({
+        invoice_id: invoiceId,
+        name: product.name,
+        quantity: product.quantity,
+        price: product.price,
+        tax: product.tax,
+        discount: product.discount
+      }));
+      
+      // Insert invoice products
+      const { error: productsError } = await supabase
+        .from('invoice_products')
+        .insert(invoiceProducts);
+        
+      if (productsError) throw productsError;
+      
+      // Update estimate status to 'converted'
+      const { error: updateError } = await supabase
+        .from('estimates')
+        .update({ status: 'converted' })
+        .eq('id', id);
+        
+      if (updateError) throw updateError;
+      
+      toast.success("Estimate converted to invoice successfully");
+      
+      // Navigate to the new invoice
+      navigate(`/invoice/${invoiceId}`);
+      
+    } catch (error: any) {
+      toast.error("Error converting estimate to invoice", {
+        description: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleUpdateProducts = (updatedProducts: Product[]) => {
+    setProducts(updatedProducts);
+    setHasChanges(true);
+  };
+  
+  return (
+    <div className="min-h-screen bg-gray-50 pb-12">
+      <div className="bg-primary text-white p-4 mb-8">
+        <div className="container mx-auto px-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-white hover:text-white hover:bg-primary/80"
+              onClick={() => navigate('/estimates')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Estimates
+            </Button>
+            <h1 className="text-xl font-bold">
+              {isEditMode ? "Edit Estimate" : "Create New Estimate"}
+            </h1>
+          </div>
           
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <CompanySelector 
-                onCompanySelect={handleCompanySelect}
-                currentCompany={{
-                  company_name: estimateDetails.yourCompany,
-                  company_email: estimateDetails.yourEmail,
-                  company_address: estimateDetails.yourAddress
-                }}
-              />
-            </CardContent>
-          </Card>
-          
-          <ProductList 
-            products={products} 
-            setProducts={setProducts} 
-          />
-          
-          <Card>
-            <CardContent className="pt-6">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              className="border-white text-white hover:bg-white hover:text-primary"
+              onClick={handleSave}
+              disabled={isLoading}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Save Estimate
+            </Button>
+            
+            {isEditMode && (
+              <Button 
+                variant="secondary"
+                onClick={handleConvertToInvoice}
+                disabled={isLoading || status === 'converted'}
+              >
+                <ReceiptText className="h-4 w-4 mr-2" />
+                Convert to Invoice
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4">
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Estimate Details</CardTitle>
+            <CardDescription>
+              Enter the details for your estimate
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="notes">Notes</Label>
+                  <Label htmlFor="estimateNumber">Estimate Number</Label>
+                  <Input
+                    id="estimateNumber"
+                    name="estimateNumber"
+                    value={estimateDetails.estimateNumber}
+                    onChange={handleInputChange}
+                    placeholder="EST-000000"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="date">Date</Label>
+                  <Input
+                    id="date"
+                    name="date"
+                    type="date"
+                    value={estimateDetails.date}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="dueDate">Due Date</Label>
+                  <Input
+                    id="dueDate"
+                    name="dueDate"
+                    type="date"
+                    value={estimateDetails.dueDate}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                {isEditMode && (
+                  <div>
+                    <Label htmlFor="status">Status</Label>
+                    <Select value={status} onValueChange={handleStatusChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="draft">Draft</SelectItem>
+                        <SelectItem value="sent">Sent</SelectItem>
+                        <SelectItem value="accepted">Accepted</SelectItem>
+                        <SelectItem value="declined">Declined</SelectItem>
+                        <SelectItem value="converted" disabled={status === 'converted'}>
+                          Converted to Invoice
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="clientName">Client Name</Label>
+                  <Input
+                    id="clientName"
+                    name="clientName"
+                    value={estimateDetails.clientName}
+                    onChange={handleInputChange}
+                    placeholder="Client Name"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="clientEmail">Client Email</Label>
+                  <Input
+                    id="clientEmail"
+                    name="clientEmail"
+                    type="email"
+                    value={estimateDetails.clientEmail}
+                    onChange={handleInputChange}
+                    placeholder="client@example.com"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="clientAddress">Client Address</Label>
                   <Textarea
-                    id="notes"
-                    placeholder="Enter any additional notes or terms..."
-                    className="min-h-[100px]"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
+                    id="clientAddress"
+                    name="clientAddress"
+                    value={estimateDetails.clientAddress}
+                    onChange={handleInputChange}
+                    placeholder="Client Address"
+                    rows={3}
                   />
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="space-y-6">
-          <InvoiceSummary products={products} />
-          
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <Button 
-                  className="w-full" 
-                  onClick={() => handleSaveEstimate("draft")}
-                  disabled={isSaving || isLoading}
-                >
-                  {isSaving ? "Saving..." : "Save as Draft"}
-                </Button>
-                
-                <Button 
-                  className="w-full" 
-                  variant="outline"
-                  onClick={() => handleSaveEstimate("sent")}
-                  disabled={isSaving || isLoading}
-                >
-                  {isSaving ? "Saving..." : "Save as Sent"}
-                </Button>
-                
-                <Button 
-                  className="w-full" 
-                  variant="secondary"
-                  onClick={() => navigate("/estimates")}
-                  disabled={isSaving || isLoading}
-                >
-                  Cancel
-                </Button>
+            </div>
+            
+            <Separator className="my-6" />
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <Label htmlFor="yourCompany">Your Company</Label>
+                <Input
+                  id="yourCompany"
+                  name="yourCompany"
+                  value={estimateDetails.yourCompany}
+                  onChange={handleInputChange}
+                  placeholder="Your Company"
+                />
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              
+              <div>
+                <Label htmlFor="yourEmail">Your Email</Label>
+                <Input
+                  id="yourEmail"
+                  name="yourEmail"
+                  type="email"
+                  value={estimateDetails.yourEmail}
+                  onChange={handleInputChange}
+                  placeholder="you@example.com"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="yourAddress">Your Address</Label>
+                <Textarea
+                  id="yourAddress"
+                  name="yourAddress"
+                  value={estimateDetails.yourAddress}
+                  onChange={handleInputChange}
+                  placeholder="Your Address"
+                  rows={1}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Products / Services</CardTitle>
+            <CardDescription>
+              Add products or services to your estimate
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ProductList products={products} onUpdateProducts={handleUpdateProducts} />
+          </CardContent>
+        </Card>
+        
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Notes</CardTitle>
+            <CardDescription>
+              Add any additional notes to your estimate
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              value={notes}
+              onChange={(e) => {
+                setNotes(e.target.value);
+                setHasChanges(true);
+              }}
+              placeholder="Enter any additional notes or payment instructions..."
+              rows={4}
+            />
+          </CardContent>
+          <CardFooter className="flex justify-between border-t pt-6">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/estimates')}
+            >
+              Cancel
+            </Button>
+            <div className="flex gap-2">
+              {isEditMode && (
+                <Button 
+                  variant="outline"
+                  onClick={handleConvertToInvoice}
+                  disabled={isLoading || status === 'converted'}
+                >
+                  <ReceiptText className="h-4 w-4 mr-2" />
+                  Convert to Invoice
+                </Button>
+              )}
+              <Button
+                onClick={handleSave}
+                disabled={isLoading}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {isEditMode ? "Update Estimate" : "Create Estimate"}
+              </Button>
+            </div>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );

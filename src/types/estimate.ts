@@ -24,4 +24,5 @@ export interface Estimate {
   details: EstimateDetails;
   products: EstimateProduct[];
   notes?: string;
+  status?: 'draft' | 'sent' | 'accepted' | 'declined' | 'converted';
 }
