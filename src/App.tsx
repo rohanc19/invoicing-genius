@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import InvoicesList from "./pages/InvoicesList";
 import CreateInvoice from "./pages/CreateInvoice";
+import InvoiceView from "./pages/InvoiceView";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
@@ -31,6 +32,7 @@ const App = () => (
               <Route path="/create-invoice" element={<CreateInvoice />} />
               <Route path="/edit-invoice/:id" element={<CreateInvoice />} />
               <Route path="/invoices" element={<InvoicesList />} />
+              <Route path="/invoice/:id" element={<InvoiceView />} />
               <Route path="/invoice-editor" element={<Index />} />
               <Route path="/profile" element={<Profile />} />
             </Route>
