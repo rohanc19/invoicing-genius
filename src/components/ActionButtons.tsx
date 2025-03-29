@@ -1,9 +1,9 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Printer, Save, FileText, Download } from "lucide-react";
+import { Printer, Save, FileText, Download, MessageCircle } from "lucide-react";
 import { Invoice } from "../types/invoice";
-import { exportToPDF } from "../utils/pdfUtils";
+import { exportToPDF, shareInvoicePDF, shareInvoiceViaWhatsApp } from "../utils/pdfUtils";
 import { exportToExcel } from "../utils/exportUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -86,6 +86,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ invoice, disabled }) => {
     }
   };
 
+  const handleWhatsAppShare = async () => {
+    await shareInvoiceViaWhatsApp(invoice);
+  };
+
   return (
     <div className="mt-8 flex flex-wrap gap-4 justify-center md:justify-end">
       <Button 
@@ -116,6 +120,16 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ invoice, disabled }) => {
       >
         <Download className="h-5 w-5" />
         <span>Download PDF</span>
+      </Button>
+      
+      <Button 
+        variant="outline" 
+        disabled={disabled} 
+        onClick={handleWhatsAppShare}
+        className="flex items-center gap-2"
+      >
+        <MessageCircle className="h-5 w-5" />
+        <span>WhatsApp</span>
       </Button>
       
       <Button 

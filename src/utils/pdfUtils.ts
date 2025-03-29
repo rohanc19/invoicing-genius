@@ -244,3 +244,35 @@ export const shareInvoicePDF = async (invoice: Invoice) => {
     return true;
   }
 };
+
+// Add WhatsApp sharing functionality
+export const shareInvoiceViaWhatsApp = async (invoice: Invoice) => {
+  const doc = generateInvoicePDF(invoice);
+  const pdfBlob = doc.output('blob');
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  
+  // Create a temporary link to download the PDF
+  const tempLink = document.createElement('a');
+  tempLink.href = pdfUrl;
+  tempLink.download = `Invoice_${invoice.details.invoiceNumber}.pdf`;
+  tempLink.click();
+  
+  // Construct the WhatsApp message
+  const message = encodeURIComponent(
+    `Hello ${invoice.details.clientName},\n\n` +
+    `I'm sharing Invoice #${invoice.details.invoiceNumber} with you.\n` +
+    `Total: ${formatCurrency(calculateTotal(invoice.products))}\n\n` +
+    `Please check the attached PDF for details.`
+  );
+  
+  // Open WhatsApp with the pre-filled message
+  const whatsappUrl = `https://wa.me/?text=${message}`;
+  window.open(whatsappUrl, '_blank');
+  
+  // Clean up
+  setTimeout(() => {
+    URL.revokeObjectURL(pdfUrl);
+  }, 100);
+  
+  return true;
+};

@@ -1,4 +1,3 @@
-
 import { Estimate } from "../types/estimate";
 import { calculateProductTotal, calculateSubtotal, calculateTotal, calculateTotalDiscount, calculateTotalTax, formatCurrency } from "./calculations";
 import jsPDF from "jspdf";
@@ -245,4 +244,36 @@ export const shareEstimatePDF = async (estimate: Estimate) => {
     URL.revokeObjectURL(url);
     return true;
   }
+};
+
+// Add WhatsApp sharing functionality
+export const shareEstimateViaWhatsApp = async (estimate: Estimate) => {
+  const doc = generateEstimatePDF(estimate);
+  const pdfBlob = doc.output('blob');
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  
+  // Create a temporary link to download the PDF
+  const tempLink = document.createElement('a');
+  tempLink.href = pdfUrl;
+  tempLink.download = `Estimate_${estimate.details.estimateNumber}.pdf`;
+  tempLink.click();
+  
+  // Construct the WhatsApp message
+  const message = encodeURIComponent(
+    `Hello ${estimate.details.clientName},\n\n` +
+    `I'm sharing Estimate #${estimate.details.estimateNumber} with you.\n` +
+    `Total: ${formatCurrency(calculateTotal(estimate.products))}\n\n` +
+    `Please check the attached PDF for details.`
+  );
+  
+  // Open WhatsApp with the pre-filled message
+  const whatsappUrl = `https://wa.me/?text=${message}`;
+  window.open(whatsappUrl, '_blank');
+  
+  // Clean up
+  setTimeout(() => {
+    URL.revokeObjectURL(pdfUrl);
+  }, 100);
+  
+  return true;
 };

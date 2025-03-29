@@ -1,9 +1,9 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Printer, Download, Share } from "lucide-react";
+import { Printer, Download, Share, MessageCircle } from "lucide-react";
 import { Estimate } from "../types/estimate";
-import { exportEstimateToPDF, shareEstimatePDF } from "../utils/estimatePdfUtils";
+import { exportEstimateToPDF, shareEstimatePDF, shareEstimateViaWhatsApp } from "../utils/estimatePdfUtils";
 
 interface EstimateActionButtonsProps {
   estimate: Estimate;
@@ -24,6 +24,10 @@ const EstimateActionButtons: React.FC<EstimateActionButtonsProps> = ({
 
   const handleShare = async () => {
     await shareEstimatePDF(estimate);
+  };
+  
+  const handleWhatsAppShare = async () => {
+    await shareEstimateViaWhatsApp(estimate);
   };
 
   // Compact mode for sidebar
@@ -58,6 +62,15 @@ const EstimateActionButtons: React.FC<EstimateActionButtonsProps> = ({
             Share Estimate
           </Button>
         )}
+        
+        <Button 
+          className="w-full" 
+          variant="outline"
+          onClick={handleWhatsAppShare}
+        >
+          <MessageCircle className="h-4 w-4 mr-2" />
+          Share via WhatsApp
+        </Button>
       </div>
     );
   }
@@ -93,6 +106,15 @@ const EstimateActionButtons: React.FC<EstimateActionButtonsProps> = ({
           Share
         </Button>
       )}
+      
+      <Button 
+        variant="outline" 
+        size="sm"
+        onClick={handleWhatsAppShare}
+      >
+        <MessageCircle className="h-4 w-4 mr-2" />
+        WhatsApp
+      </Button>
     </div>
   );
 };
