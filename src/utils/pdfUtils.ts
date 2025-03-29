@@ -1,4 +1,3 @@
-
 import { Invoice } from "../types/invoice";
 import { calculateProductTotal, calculateSubtotal, calculateTotal, calculateTotalDiscount, calculateTotalTax, formatCurrency } from "./calculations";
 import jsPDF from "jspdf";
@@ -13,7 +12,7 @@ import {
   addFooter,
   shareDocumentViaWhatsApp,
   createEmailLink
-} from "./pdfCommonUtils";
+} from "./pdf";
 
 // Export this function for use in ActionButtons component
 export const exportToPDF = (invoice: Invoice, download: boolean = false) => {
