@@ -1,6 +1,6 @@
-
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { toast } from "@/hooks/use-toast";
 
 // Add type declarations for jspdf-autotable
 declare module "jspdf" {
@@ -229,8 +229,7 @@ export const shareDocumentViaWhatsApp = async (
 ) => {
   
   try {
-    // For WhatsApp sharing, we need to use the web API since we can't directly attach files
-    // First, we share the file with the user's device (download)
+    // Download the PDF first
     const pdfUrl = URL.createObjectURL(pdfBlob);
     const tempLink = document.createElement('a');
     tempLink.href = pdfUrl;
@@ -239,15 +238,22 @@ export const shareDocumentViaWhatsApp = async (
     tempLink.click();
     document.body.removeChild(tempLink);
     
-    // Allow a moment for the download to start
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Show user instructions toast
+    toast({
+      title: "PDF Downloaded",
+      description: "The PDF has been downloaded. Share it manually as an attachment in WhatsApp.",
+      duration: 5000,
+    });
     
-    // Construct the WhatsApp message
+    // Wait a moment to ensure download starts
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Construct a message for WhatsApp
     const message = encodeURIComponent(
       `Hello ${recipientName},\n\n` +
       `I'm sharing ${documentType} #${documentNumber} with you.\n` +
       `Total: ${total}\n\n` +
-      `Please check the attached PDF I just shared with you for details.`
+      `I've sent the ${documentType.toLowerCase()} as a separate attachment.`
     );
     
     // Open WhatsApp with the pre-filled message
@@ -262,6 +268,11 @@ export const shareDocumentViaWhatsApp = async (
     return true;
   } catch (error) {
     console.error('Error sharing via WhatsApp:', error);
+    toast({
+      title: "Sharing failed",
+      description: "Could not share the document. Please try again.",
+      variant: "destructive",
+    });
     return false;
   }
 };

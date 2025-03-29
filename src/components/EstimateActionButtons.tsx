@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Estimate } from "../types/estimate";
 import { exportEstimateToPDF, shareEstimatePDF, shareEstimateViaWhatsApp, shareEstimateViaEmail } from "../utils/estimatePdfUtils";
+import { toast } from "@/hooks/use-toast";
 
 interface EstimateActionButtonsProps {
   estimate: Estimate;
@@ -27,6 +28,7 @@ const EstimateActionButtons: React.FC<EstimateActionButtonsProps> = ({
   compact = false 
 }) => {
   const [isSharing, setIsSharing] = useState(false);
+  const [isWhatsAppSharing, setIsWhatsAppSharing] = useState(false);
 
   const handlePrint = () => {
     exportEstimateToPDF(estimate, false);
@@ -40,17 +42,29 @@ const EstimateActionButtons: React.FC<EstimateActionButtonsProps> = ({
     setIsSharing(true);
     try {
       await shareEstimatePDF(estimate);
+    } catch (error) {
+      toast({
+        title: "Sharing failed",
+        description: "Could not share the estimate. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSharing(false);
     }
   };
   
   const handleWhatsAppShare = async () => {
-    setIsSharing(true);
+    setIsWhatsAppSharing(true);
     try {
       await shareEstimateViaWhatsApp(estimate);
+    } catch (error) {
+      toast({
+        title: "WhatsApp sharing failed",
+        description: "Could not share via WhatsApp. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setIsSharing(false);
+      setIsWhatsAppSharing(false);
     }
   };
 
@@ -85,24 +99,24 @@ const EstimateActionButtons: React.FC<EstimateActionButtonsProps> = ({
             <Button 
               className="w-full" 
               variant="outline"
-              disabled={isSharing}
+              disabled={isSharing || isWhatsAppSharing}
             >
               <Share className="h-4 w-4 mr-2" />
-              {isSharing ? "Sharing..." : "Share Estimate"}
+              {isSharing || isWhatsAppSharing ? "Sharing..." : "Share Estimate"}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             {navigator.share && (
-              <DropdownMenuItem onClick={handleShare}>
+              <DropdownMenuItem onClick={handleShare} disabled={isSharing || isWhatsAppSharing}>
                 <Share className="h-4 w-4 mr-2" />
                 Share
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem onClick={handleWhatsAppShare}>
+            <DropdownMenuItem onClick={handleWhatsAppShare} disabled={isSharing || isWhatsAppSharing}>
               <MessageCircle className="h-4 w-4 mr-2" />
-              WhatsApp
+              {isWhatsAppSharing ? "Processing..." : "WhatsApp"}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleEmailShare}>
+            <DropdownMenuItem onClick={handleEmailShare} disabled={isSharing || isWhatsAppSharing}>
               <Mail className="h-4 w-4 mr-2" />
               Email
             </DropdownMenuItem>
@@ -138,24 +152,24 @@ const EstimateActionButtons: React.FC<EstimateActionButtonsProps> = ({
           <Button 
             variant="outline" 
             size="sm"
-            disabled={isSharing}
+            disabled={isSharing || isWhatsAppSharing}
           >
             <Share className="h-4 w-4 mr-2" />
-            {isSharing ? "Sharing..." : "Share"}
+            {isSharing || isWhatsAppSharing ? "Sharing..." : "Share"}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           {navigator.share && (
-            <DropdownMenuItem onClick={handleShare}>
+            <DropdownMenuItem onClick={handleShare} disabled={isSharing || isWhatsAppSharing}>
               <Share className="h-4 w-4 mr-2" />
               Share
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onClick={handleWhatsAppShare}>
+          <DropdownMenuItem onClick={handleWhatsAppShare} disabled={isSharing || isWhatsAppSharing}>
             <MessageCircle className="h-4 w-4 mr-2" />
-            WhatsApp
+            {isWhatsAppSharing ? "Processing..." : "WhatsApp"}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleEmailShare}>
+          <DropdownMenuItem onClick={handleEmailShare} disabled={isSharing || isWhatsAppSharing}>
             <Mail className="h-4 w-4 mr-2" />
             Email
           </DropdownMenuItem>

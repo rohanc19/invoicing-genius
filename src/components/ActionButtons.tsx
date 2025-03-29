@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -17,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Invoice } from "../types/invoice";
-import { exportToPDF, shareInvoicePDF, shareInvoiceViaWhatsApp } from "../utils/pdfUtils";
+import { exportToPDF, shareInvoicePDF, shareInvoiceViaWhatsApp, shareInvoiceViaEmail } from "../utils/pdfUtils";
 import { exportToExcel } from "../utils/exportUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,6 +31,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ invoice, disabled }) => {
   const { user } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [isWhatsAppSharing, setIsWhatsAppSharing] = useState(false);
   
   const handleSave = async () => {
     if (!user) {
@@ -101,21 +101,38 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ invoice, disabled }) => {
     }
   };
 
-  const handleWhatsAppShare = async () => {
+  const handleShare = async () => {
     setIsSharing(true);
     try {
-      await shareInvoiceViaWhatsApp(invoice);
+      await shareInvoicePDF(invoice);
+    } catch (error) {
+      toast({
+        title: "Sharing failed",
+        description: "Could not share the invoice. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSharing(false);
     }
   };
 
+  const handleWhatsAppShare = async () => {
+    setIsWhatsAppSharing(true);
+    try {
+      await shareInvoiceViaWhatsApp(invoice);
+    } catch (error) {
+      toast({
+        title: "WhatsApp sharing failed",
+        description: "Could not share via WhatsApp. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsWhatsAppSharing(false);
+    }
+  };
+
   const handleEmailShare = () => {
-    const subject = encodeURIComponent(`Invoice ${invoice.details.invoiceNumber}`);
-    const body = encodeURIComponent(
-      `Hello ${invoice.details.clientName},\n\nPlease find attached the invoice ${invoice.details.invoiceNumber}.\n\nBest regards,\n${invoice.details.yourCompany}`
-    );
-    window.location.href = `mailto:${invoice.details.clientEmail}?subject=${subject}&body=${body}`;
+    window.location.href = shareInvoiceViaEmail(invoice);
   };
 
   return (
@@ -154,32 +171,25 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ invoice, disabled }) => {
         <DropdownMenuTrigger asChild>
           <Button 
             variant="outline" 
-            disabled={disabled || isSharing}
+            disabled={disabled || isSharing || isWhatsAppSharing}
             className="flex items-center gap-2"
           >
             <Share className="h-5 w-5" />
-            <span>{isSharing ? "Sharing..." : "Share"}</span>
+            <span>{isSharing || isWhatsAppSharing ? "Sharing..." : "Share"}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           {navigator.share && (
-            <DropdownMenuItem onClick={async () => {
-              setIsSharing(true);
-              try {
-                await shareInvoicePDF(invoice);
-              } finally {
-                setIsSharing(false);
-              }
-            }}>
+            <DropdownMenuItem onClick={handleShare} disabled={isSharing || isWhatsAppSharing}>
               <Share className="h-4 w-4 mr-2" />
               Share
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onClick={handleWhatsAppShare}>
+          <DropdownMenuItem onClick={handleWhatsAppShare} disabled={isSharing || isWhatsAppSharing}>
             <MessageCircle className="h-4 w-4 mr-2" />
-            WhatsApp
+            {isWhatsAppSharing ? "Processing..." : "WhatsApp"}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleEmailShare}>
+          <DropdownMenuItem onClick={handleEmailShare} disabled={isSharing || isWhatsAppSharing}>
             <Mail className="h-4 w-4 mr-2" />
             Email
           </DropdownMenuItem>
