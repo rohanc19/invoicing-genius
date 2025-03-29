@@ -11,7 +11,7 @@ export interface EstimateProduct {
 export interface EstimateDetails {
   estimateNumber: string;
   date: string;
-  dueDate: string;
+  dueDate: string;  // Using dueDate instead of expiryDate for consistency
   clientName: string;
   clientEmail: string;
   clientAddress: string;
@@ -21,6 +21,7 @@ export interface EstimateDetails {
 }
 
 export interface Estimate {
+  id?: string;
   details: EstimateDetails;
   products: EstimateProduct[];
   notes?: string;

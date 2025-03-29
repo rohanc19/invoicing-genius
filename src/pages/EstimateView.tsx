@@ -1,17 +1,22 @@
+
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Estimate } from "@/types/estimate";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { FileBarChart, ArrowLeft } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { FileBarChart, ArrowLeft, Edit, Printer, Download, Check, X } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import EstimateActionButtons from "@/components/EstimateActionButtons";
 import EstimateDisplay from "@/components/EstimateDisplay";
 import AppHeader from "@/components/AppHeader";
+import { format } from "date-fns";
+import { exportEstimateToPDF } from "@/utils/estimatePdfUtils";
 
 const EstimateView = () => {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const [estimate, setEstimate] = useState<Estimate | null>(null);
@@ -77,7 +82,7 @@ const EstimateView = () => {
           const estimateDetails = {
             estimateNumber: estimateData.estimate_number,
             date: estimateData.date,
-            expiryDate: estimateData.expiry_date,
+            dueDate: estimateData.due_date,
             clientName: estimateData.client_name,
             clientEmail: estimateData.client_email,
             clientAddress: estimateData.client_address,
@@ -95,12 +100,14 @@ const EstimateView = () => {
             discount: product.discount || 0,
           }));
           
+          const status = estimateData.status as Estimate['status'] || 'draft';
+          
           setEstimate({
             id: estimateData.id,
             details: estimateDetails,
             products: products,
             notes: estimateData.notes || "",
-            status: estimateData.status || "pending",
+            status: status,
           });
         }
       } catch (error: any) {
@@ -116,6 +123,16 @@ const EstimateView = () => {
     
     fetchEstimate();
   }, [id, user]);
+
+  const handlePrint = () => {
+    if (!estimate) return;
+    exportEstimateToPDF(estimate);
+  };
+  
+  const handleDownload = () => {
+    if (!estimate) return;
+    exportEstimateToPDF(estimate, true);
+  };
 
   if (isLoading) {
     return (
@@ -158,13 +175,40 @@ const EstimateView = () => {
         </div>
         
         <Card className="mb-6">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle>Estimate Details</CardTitle>
+              <Badge variant={
+                estimate.status === 'accepted' ? 'default' : 
+                estimate.status === 'declined' ? 'destructive' : 
+                estimate.status === 'sent' ? 'secondary' : 
+                'outline'
+              }>
+                {estimate.status?.toUpperCase() || 'DRAFT'}
+              </Badge>
+            </div>
+          </CardHeader>
           <CardContent className="pt-6">
             <EstimateDisplay estimate={estimate} />
           </CardContent>
         </Card>
         
-        <div className="flex justify-end">
-          <EstimateActionButtons estimate={estimate} />
+        <div className="flex flex-wrap gap-2 justify-end">
+          <Button variant="outline" onClick={handlePrint}>
+            <Printer className="h-4 w-4 mr-2" />
+            Print
+          </Button>
+          <Button variant="outline" onClick={handleDownload}>
+            <Download className="h-4 w-4 mr-2" />
+            Download
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate(`/edit-estimate/${estimate.id}`)}
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
         </div>
       </div>
     </div>

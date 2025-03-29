@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Invoice } from "@/types/invoice";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { FileText, ArrowLeft } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import ActionButtons from "@/components/ActionButtons";
+import { FileText, ArrowLeft, Edit, Printer, Download, Check, X } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import InvoiceDisplay from "@/components/InvoiceDisplay";
 import AppHeader from "@/components/AppHeader";
+import { format } from "date-fns";
+import { exportToPDF } from "@/utils/pdfUtils";
 
 interface InvoiceData {
   id: string;
@@ -24,16 +26,48 @@ interface InvoiceData {
   your_address: string | null;
   notes: string | null;
   status: string;
-  products: Product[];
+  products: any[];
   total_amount: number;
 }
 
 const InvoiceView = () => {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const [invoice, setInvoice] = useState<InvoiceData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        if (!user) return;
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+          
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          setUserProfile(data);
+        }
+      } catch (error: any) {
+        toast({
+          title: "Error fetching profile",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    };
+    
+    fetchUserProfile();
+  }, [user]);
 
   useEffect(() => {
     const fetchInvoice = async () => {

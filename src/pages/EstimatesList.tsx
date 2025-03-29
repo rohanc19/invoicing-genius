@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
 import { 
   Table, 
   TableBody, 
@@ -13,7 +9,18 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { FileBarChart, Plus, ExternalLink, Edit, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { 
+  Plus, 
+  FileBarChart, 
+  ExternalLink, 
+  Edit, 
+  FileText,
+  ArrowRightLeft
+} from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { Link, useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import AppHeader from "@/components/AppHeader";

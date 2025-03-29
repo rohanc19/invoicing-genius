@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { EstimateDetails, Product, Estimate } from "../types/estimate";
+import { EstimateDetails, EstimateProduct, Estimate } from "../types/estimate";
 import EstimateHeader from "../components/EstimateHeader";
 import ProductList from "../components/ProductList";
 import EstimateSummary from "../components/EstimateSummary";
@@ -19,7 +20,7 @@ import CompanySelector from "@/components/CompanySelector";
 import AppHeader from "@/components/AppHeader";
 
 const CreateEstimate = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const [userProfile, setUserProfile] = useState<any>(null);
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -30,7 +31,7 @@ const CreateEstimate = () => {
   const [details, setDetails] = useState<EstimateDetails>({
     estimateNumber: `EST-${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
     date: new Date().toISOString().split('T')[0],
-    expiryDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString().split('T')[0], // Expires in 30 days
+    dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString().split('T')[0], // Expires in 30 days
     clientName: "",
     clientEmail: "",
     clientAddress: "",
@@ -40,7 +41,7 @@ const CreateEstimate = () => {
   });
 
   // Products state
-  const [products, setProducts] = useState<Product[]>([
+  const [products, setProducts] = useState<EstimateProduct[]>([
     {
       id: uuidv4(),
       name: "",
@@ -105,7 +106,7 @@ const CreateEstimate = () => {
           setDetails({
             estimateNumber: estimateData.estimate_number,
             date: estimateData.date ? new Date(estimateData.date).toISOString().split('T')[0] : "",
-            expiryDate: estimateData.expiry_date ? new Date(estimateData.expiry_date).toISOString().split('T')[0] : "",
+            dueDate: estimateData.due_date ? new Date(estimateData.due_date).toISOString().split('T')[0] : "",
             clientName: estimateData.client_name || "",
             clientEmail: estimateData.client_email || "",
             clientAddress: estimateData.client_address || "",
@@ -115,7 +116,7 @@ const CreateEstimate = () => {
           });
           
           setNotes(estimateData.notes || "");
-          setIsDraft(estimateData.is_draft || false);
+          setIsDraft(estimateData.status === 'draft' || false);
           
           // Fetch estimate products
           const { data: productsData, error: productsError } = await supabase
@@ -192,9 +193,9 @@ const CreateEstimate = () => {
             your_email: details.yourEmail,
             your_address: details.yourAddress,
             date: details.date,
-            expiry_date: details.expiryDate,
+            due_date: details.dueDate,
             notes: notes,
-            is_draft: true,
+            status: 'draft',
             updated_at: new Date().toISOString()
           })
           .eq('id', id);
@@ -224,9 +225,9 @@ const CreateEstimate = () => {
             your_email: details.yourEmail,
             your_address: details.yourAddress,
             date: details.date,
-            expiry_date: details.expiryDate,
+            due_date: details.dueDate,
             notes: notes,
-            is_draft: true
+            status: 'draft'
           })
           .select()
           .single();
