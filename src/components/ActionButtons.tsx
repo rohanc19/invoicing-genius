@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -32,6 +33,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ invoice, disabled }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [isWhatsAppSharing, setIsWhatsAppSharing] = useState(false);
+  const [isEmailSharing, setIsEmailSharing] = useState(false);
   
   const handleSave = async () => {
     if (!user) {
@@ -132,7 +134,18 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ invoice, disabled }) => {
   };
 
   const handleEmailShare = () => {
-    window.location.href = shareInvoiceViaEmail(invoice);
+    setIsEmailSharing(true);
+    try {
+      window.location.href = shareInvoiceViaEmail(invoice);
+    } catch (error) {
+      toast({
+        title: "Email sharing failed",
+        description: "Could not share via email. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEmailSharing(false);
+    }
   };
 
   return (
@@ -171,27 +184,33 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ invoice, disabled }) => {
         <DropdownMenuTrigger asChild>
           <Button 
             variant="outline" 
-            disabled={disabled || isSharing || isWhatsAppSharing}
+            disabled={disabled || isSharing || isWhatsAppSharing || isEmailSharing}
             className="flex items-center gap-2"
           >
             <Share className="h-5 w-5" />
-            <span>{isSharing || isWhatsAppSharing ? "Sharing..." : "Share"}</span>
+            <span>{isSharing || isWhatsAppSharing || isEmailSharing ? "Sharing..." : "Share"}</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           {navigator.share && (
-            <DropdownMenuItem onClick={handleShare} disabled={isSharing || isWhatsAppSharing}>
+            <DropdownMenuItem onClick={handleShare} disabled={isSharing || isWhatsAppSharing || isEmailSharing}>
               <Share className="h-4 w-4 mr-2" />
               Share
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onClick={handleWhatsAppShare} disabled={isSharing || isWhatsAppSharing}>
+          <DropdownMenuItem 
+            onClick={handleWhatsAppShare} 
+            disabled={isSharing || isWhatsAppSharing || isEmailSharing}
+          >
             <MessageCircle className="h-4 w-4 mr-2" />
             {isWhatsAppSharing ? "Processing..." : "WhatsApp"}
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleEmailShare} disabled={isSharing || isWhatsAppSharing}>
+          <DropdownMenuItem 
+            onClick={handleEmailShare} 
+            disabled={isSharing || isWhatsAppSharing || isEmailSharing}
+          >
             <Mail className="h-4 w-4 mr-2" />
-            Email
+            {isEmailSharing ? "Opening Email..." : "Email"}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

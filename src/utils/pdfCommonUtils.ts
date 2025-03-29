@@ -218,7 +218,7 @@ export const addFooter = (doc: jsPDF, contactEmail: string) => {
     doc.internal.pageSize.getWidth() / 2, pageHeight - 7, { align: 'center' });
 };
 
-// Generic function to share a document via WhatsApp
+// Improved function to share a document via WhatsApp
 export const shareDocumentViaWhatsApp = async (
   pdfBlob: Blob,
   fileName: string,
@@ -238,11 +238,11 @@ export const shareDocumentViaWhatsApp = async (
     tempLink.click();
     document.body.removeChild(tempLink);
     
-    // Show user instructions toast
+    // Show user instructions toast with more detailed steps
     toast({
       title: "PDF Downloaded",
-      description: "The PDF has been downloaded. Share it manually as an attachment in WhatsApp.",
-      duration: 5000,
+      description: "1. The PDF has been downloaded. 2. Click 'Continue to WhatsApp' to open WhatsApp. 3. Attach the PDF manually using the clip icon.",
+      duration: 7000,
     });
     
     // Wait a moment to ensure download starts
@@ -253,12 +253,35 @@ export const shareDocumentViaWhatsApp = async (
       `Hello ${recipientName},\n\n` +
       `I'm sharing ${documentType} #${documentNumber} with you.\n` +
       `Total: ${total}\n\n` +
-      `I've sent the ${documentType.toLowerCase()} as a separate attachment.`
+      `Please see the attached ${documentType.toLowerCase()} document.`
     );
     
-    // Open WhatsApp with the pre-filled message
-    const whatsappUrl = `https://wa.me/?text=${message}`;
-    window.open(whatsappUrl, '_blank');
+    // Create a button to continue to WhatsApp after download
+    const continueToastId = "continue-to-whatsapp";
+    
+    // Check if toast already exists and remove it
+    const existingToast = document.getElementById(continueToastId);
+    if (existingToast) {
+      existingToast.remove();
+    }
+    
+    // Create a new toast with a continue button
+    setTimeout(() => {
+      toast({
+        title: "Continue to WhatsApp",
+        description: "PDF downloaded. Click below to open WhatsApp and then attach the PDF manually.",
+        action: (
+          <button 
+            id={continueToastId}
+            onClick={() => window.open(`https://wa.me/?text=${message}`, '_blank')}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-xs"
+          >
+            Continue to WhatsApp
+          </button>
+        ),
+        duration: 10000,
+      });
+    }, 1000);
     
     // Clean up
     setTimeout(() => {
