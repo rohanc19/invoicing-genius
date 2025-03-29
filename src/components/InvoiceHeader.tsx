@@ -4,6 +4,7 @@ import { InvoiceDetails } from "../types/invoice";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import ClientSelector from "./ClientSelector";
 
 interface InvoiceHeaderProps {
   details: InvoiceDetails;
@@ -14,6 +15,19 @@ const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({ details, setDetails }) =>
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setDetails(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleClientSelect = (clientDetails: { 
+    client_name: string; 
+    client_email: string; 
+    client_address: string;
+  }) => {
+    setDetails(prev => ({
+      ...prev,
+      clientName: clientDetails.client_name,
+      clientEmail: clientDetails.client_email,
+      clientAddress: clientDetails.client_address,
+    }));
   };
 
   return (
@@ -89,37 +103,14 @@ const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({ details, setDetails }) =>
             </div>
           </div>
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="clientName">Client Name</Label>
-              <Input
-                id="clientName"
-                name="clientName"
-                value={details.clientName}
-                onChange={handleChange}
-                placeholder="Client Name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="clientEmail">Client Email</Label>
-              <Input
-                id="clientEmail"
-                name="clientEmail"
-                type="email"
-                value={details.clientEmail}
-                onChange={handleChange}
-                placeholder="client@email.com"
-              />
-            </div>
-            <div>
-              <Label htmlFor="clientAddress">Client Address</Label>
-              <Input
-                id="clientAddress"
-                name="clientAddress"
-                value={details.clientAddress}
-                onChange={handleChange}
-                placeholder="Client Address"
-              />
-            </div>
+            <ClientSelector 
+              onClientSelect={handleClientSelect}
+              currentClient={{
+                client_name: details.clientName,
+                client_email: details.clientEmail,
+                client_address: details.clientAddress
+              }}
+            />
           </div>
         </div>
       </CardContent>
