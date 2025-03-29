@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Estimate } from "../types/estimate";
-import { exportEstimateToPDF, shareEstimatePDF, shareEstimateViaWhatsApp } from "../utils/estimatePdfUtils";
+import { exportEstimateToPDF, shareEstimatePDF, shareEstimateViaWhatsApp, shareEstimateViaEmail } from "../utils/estimatePdfUtils";
 
 interface EstimateActionButtonsProps {
   estimate: Estimate;
@@ -55,11 +55,7 @@ const EstimateActionButtons: React.FC<EstimateActionButtonsProps> = ({
   };
 
   const handleEmailShare = () => {
-    const subject = encodeURIComponent(`Estimate ${estimate.details.estimateNumber}`);
-    const body = encodeURIComponent(
-      `Hello ${estimate.details.clientName},\n\nPlease find attached the estimate ${estimate.details.estimateNumber}.\n\nBest regards,\n${estimate.details.yourCompany}`
-    );
-    window.location.href = `mailto:${estimate.details.clientEmail}?subject=${subject}&body=${body}`;
+    window.location.href = shareEstimateViaEmail(estimate);
   };
 
   // Compact mode for sidebar
