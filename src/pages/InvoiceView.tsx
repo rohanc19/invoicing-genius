@@ -1,16 +1,15 @@
-
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Invoice } from "@/types/invoice";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Printer, Download, Edit, Check, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { Product } from "@/types/invoice";
-import { exportToPDF } from "@/utils/pdfUtils";
+import { FileText, ArrowLeft } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import ActionButtons from "@/components/ActionButtons";
+import InvoiceDisplay from "@/components/InvoiceDisplay";
+import AppHeader from "@/components/AppHeader";
 
 interface InvoiceData {
   id: string;
@@ -32,7 +31,6 @@ interface InvoiceData {
 const InvoiceView = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [invoice, setInvoice] = useState<InvoiceData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -44,7 +42,6 @@ const InvoiceView = () => {
         
         setIsLoading(true);
         
-        // Fetch invoice data
         const { data: invoiceData, error: invoiceError } = await supabase
           .from('invoices')
           .select('*')
@@ -54,7 +51,6 @@ const InvoiceView = () => {
         
         if (invoiceError) throw invoiceError;
         
-        // Fetch products for this invoice
         const { data: productsData, error: productsError } = await supabase
           .from('invoice_products')
           .select('*')
@@ -62,7 +58,6 @@ const InvoiceView = () => {
         
         if (productsError) throw productsError;
         
-        // Calculate total amount
         const total = (productsData || []).reduce((sum, product) => {
           const lineTotal = product.quantity * product.price;
           const lineTax = lineTotal * (product.tax / 100);
@@ -70,7 +65,6 @@ const InvoiceView = () => {
           return sum + lineTotal + lineTax - lineDiscount;
         }, 0);
         
-        // Combine data
         const fullInvoice = {
           ...invoiceData,
           products: productsData || [],
@@ -204,147 +198,151 @@ const InvoiceView = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="mb-6 flex items-center justify-between">
-        <Button variant="outline" onClick={() => navigate('/invoices')}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Invoices
-        </Button>
-        
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handlePrint}>
-            <Printer className="mr-2 h-4 w-4" />
-            Print
-          </Button>
-          <Button variant="outline" onClick={handleDownload}>
-            <Download className="mr-2 h-4 w-4" />
-            Download
-          </Button>
-          <Button variant="outline" onClick={() => navigate(`/edit-invoice/${invoice.id}`)}>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gray-50 pb-12">
+      <AppHeader userProfile={userProfile} />
       
-      <Card className="mb-8">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Invoice #{invoice.invoice_number}</CardTitle>
-            <Badge 
-              variant={invoice.status === 'paid' ? 'default' : 'destructive'}
-              className="text-sm"
-            >
-              {invoice.status === 'paid' ? 'PAID' : 'UNPAID'}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div>
-              <h3 className="font-medium text-sm text-gray-500 mb-1">From</h3>
-              <div className="text-lg font-medium">{invoice.your_company || 'Your Company'}</div>
-              {invoice.your_email && <div>{invoice.your_email}</div>}
-              {invoice.your_address && <div className="text-gray-600 text-sm">{invoice.your_address}</div>}
-            </div>
-            
-            <div>
-              <h3 className="font-medium text-sm text-gray-500 mb-1">Bill To</h3>
-              <div className="text-lg font-medium">{invoice.client_name}</div>
-              {invoice.client_email && <div>{invoice.client_email}</div>}
-              {invoice.client_address && <div className="text-gray-600 text-sm">{invoice.client_address}</div>}
-            </div>
-            
-            <div>
-              <h3 className="font-medium text-sm text-gray-500 mb-1">Invoice Date</h3>
-              <div>{invoice.date ? format(new Date(invoice.date), 'MMMM dd, yyyy') : 'N/A'}</div>
-            </div>
-            
-            <div>
-              <h3 className="font-medium text-sm text-gray-500 mb-1">Due Date</h3>
-              <div>{invoice.due_date ? format(new Date(invoice.due_date), 'MMMM dd, yyyy') : 'N/A'}</div>
-            </div>
-          </div>
+      <div className="container mx-auto px-4">
+        <div className="mb-6 flex items-center justify-between">
+          <Button variant="outline" onClick={() => navigate('/invoices')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Invoices
+          </Button>
           
-          <div className="border rounded-md mb-8 overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Item</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium">Qty</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium">Price</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium">Tax (%)</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium">Discount (%)</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {invoice.products.map((product, index) => {
-                  const lineTotal = product.quantity * product.price;
-                  const lineTax = lineTotal * (product.tax / 100);
-                  const lineDiscount = lineTotal * (product.discount / 100);
-                  const itemTotal = lineTotal + lineTax - lineDiscount;
-                  
-                  return (
-                    <tr key={index} className="bg-white">
-                      <td className="px-4 py-3 text-sm">{product.name}</td>
-                      <td className="px-4 py-3 text-sm text-right">{product.quantity}</td>
-                      <td className="px-4 py-3 text-sm text-right">{formatCurrency(product.price)}</td>
-                      <td className="px-4 py-3 text-sm text-right">{product.tax}%</td>
-                      <td className="px-4 py-3 text-sm text-right">{product.discount}%</td>
-                      <td className="px-4 py-3 text-sm text-right font-medium">{formatCurrency(itemTotal)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot className="bg-muted">
-                <tr>
-                  <td colSpan={5} className="px-4 py-3 text-right font-bold">Total:</td>
-                  <td className="px-4 py-3 text-right font-bold">{formatCurrency(invoice.total_amount)}</td>
-                </tr>
-              </tfoot>
-            </table>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handlePrint}>
+              <Printer className="mr-2 h-4 w-4" />
+              Print
+            </Button>
+            <Button variant="outline" onClick={handleDownload}>
+              <Download className="mr-2 h-4 w-4" />
+              Download
+            </Button>
+            <Button variant="outline" onClick={() => navigate(`/edit-invoice/${invoice.id}`)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </Button>
           </div>
-          
-          {invoice.notes && (
-            <div className="mb-8">
-              <h3 className="font-medium text-sm text-gray-500 mb-2">Notes</h3>
-              <div className="text-gray-600 text-sm whitespace-pre-line p-4 bg-gray-50 rounded-md">{invoice.notes}</div>
+        </div>
+        
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Invoice #{invoice.invoice_number}</CardTitle>
+              <Badge 
+                variant={invoice.status === 'paid' ? 'default' : 'destructive'}
+                className="text-sm"
+              >
+                {invoice.status === 'paid' ? 'PAID' : 'UNPAID'}
+              </Badge>
             </div>
-          )}
-          
-          <div className="border-t pt-6 flex justify-end">
-            <div className="flex flex-col items-end gap-4">
-              <div className="text-sm font-medium text-gray-500">
-                {invoice.status === 'paid' ? 'Mark as unpaid?' : 'Mark invoice as paid?'}
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div>
+                <h3 className="font-medium text-sm text-gray-500 mb-1">From</h3>
+                <div className="text-lg font-medium">{invoice.your_company || 'Your Company'}</div>
+                {invoice.your_email && <div>{invoice.your_email}</div>}
+                {invoice.your_address && <div className="text-gray-600 text-sm">{invoice.your_address}</div>}
               </div>
-              <div className="flex gap-2">
-                {invoice.status === 'paid' ? (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    disabled={isUpdatingStatus}
-                    onClick={() => handleStatusChange('unpaid')}
-                  >
-                    <X className="mr-2 h-4 w-4" />
-                    Mark as Unpaid
-                  </Button>
-                ) : (
-                  <Button
-                    variant="default"
-                    size="sm"
-                    disabled={isUpdatingStatus}
-                    onClick={() => handleStatusChange('paid')}
-                  >
-                    <Check className="mr-2 h-4 w-4" />
-                    Mark as Paid
-                  </Button>
-                )}
+              
+              <div>
+                <h3 className="font-medium text-sm text-gray-500 mb-1">Bill To</h3>
+                <div className="text-lg font-medium">{invoice.client_name}</div>
+                {invoice.client_email && <div>{invoice.client_email}</div>}
+                {invoice.client_address && <div className="text-gray-600 text-sm">{invoice.client_address}</div>}
+              </div>
+              
+              <div>
+                <h3 className="font-medium text-sm text-gray-500 mb-1">Invoice Date</h3>
+                <div>{invoice.date ? format(new Date(invoice.date), 'MMMM dd, yyyy') : 'N/A'}</div>
+              </div>
+              
+              <div>
+                <h3 className="font-medium text-sm text-gray-500 mb-1">Due Date</h3>
+                <div>{invoice.due_date ? format(new Date(invoice.due_date), 'MMMM dd, yyyy') : 'N/A'}</div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            
+            <div className="border rounded-md mb-8 overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-medium">Item</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">Qty</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">Price</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">Tax (%)</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">Discount (%)</th>
+                    <th className="px-4 py-3 text-right text-sm font-medium">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {invoice.products.map((product, index) => {
+                    const lineTotal = product.quantity * product.price;
+                    const lineTax = lineTotal * (product.tax / 100);
+                    const lineDiscount = lineTotal * (product.discount / 100);
+                    const itemTotal = lineTotal + lineTax - lineDiscount;
+                    
+                    return (
+                      <tr key={index} className="bg-white">
+                        <td className="px-4 py-3 text-sm">{product.name}</td>
+                        <td className="px-4 py-3 text-sm text-right">{product.quantity}</td>
+                        <td className="px-4 py-3 text-sm text-right">{formatCurrency(product.price)}</td>
+                        <td className="px-4 py-3 text-sm text-right">{product.tax}%</td>
+                        <td className="px-4 py-3 text-sm text-right">{product.discount}%</td>
+                        <td className="px-4 py-3 text-sm text-right font-medium">{formatCurrency(itemTotal)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot className="bg-muted">
+                  <tr>
+                    <td colSpan={5} className="px-4 py-3 text-right font-bold">Total:</td>
+                    <td className="px-4 py-3 text-right font-bold">{formatCurrency(invoice.total_amount)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            
+            {invoice.notes && (
+              <div className="mb-8">
+                <h3 className="font-medium text-sm text-gray-500 mb-2">Notes</h3>
+                <div className="text-gray-600 text-sm whitespace-pre-line p-4 bg-gray-50 rounded-md">{invoice.notes}</div>
+              </div>
+            )}
+            
+            <div className="border-t pt-6 flex justify-end">
+              <div className="flex flex-col items-end gap-4">
+                <div className="text-sm font-medium text-gray-500">
+                  {invoice.status === 'paid' ? 'Mark as unpaid?' : 'Mark invoice as paid?'}
+                </div>
+                <div className="flex gap-2">
+                  {invoice.status === 'paid' ? (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={isUpdatingStatus}
+                      onClick={() => handleStatusChange('unpaid')}
+                    >
+                      <X className="mr-2 h-4 w-4" />
+                      Mark as Unpaid
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      disabled={isUpdatingStatus}
+                      onClick={() => handleStatusChange('paid')}
+                    >
+                      <Check className="mr-2 h-4 w-4" />
+                      Mark as Paid
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

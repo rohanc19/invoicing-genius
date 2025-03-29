@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -148,10 +149,10 @@ const InvoicesList = () => {
     <div className="min-h-screen bg-gray-50 pb-12">
       <div className="bg-primary text-white p-4 mb-8">
         <div className="container mx-auto px-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <ReceiptText className="h-6 w-6" />
             <h1 className="text-xl font-bold">Invoicing Genius</h1>
-          </div>
+          </Link>
           
           <div className="flex items-center gap-4">
             <Button

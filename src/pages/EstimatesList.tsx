@@ -1,7 +1,10 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "@/hooks/use-toast";
 import { 
   Table, 
   TableBody, 
@@ -10,24 +13,10 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { 
-  Plus, 
-  FileText, 
-  ExternalLink, 
-  Edit, 
-  ReceiptText,
-  User,
-  LogOut,
-  Settings,
-  FileBarChart,
-  ArrowRightLeft
-} from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import { Link, useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileBarChart, Plus, ExternalLink, Edit, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import AppHeader from "@/components/AppHeader";
 
 interface EstimateListItem {
   id: string;
@@ -83,7 +72,6 @@ const EstimatesList = () => {
         
         setIsLoading(true);
         
-        // Fetch estimates with products to calculate totals
         const { data: estimatesData, error: estimatesError } = await supabase
           .from('estimates')
           .select(`
@@ -99,7 +87,6 @@ const EstimatesList = () => {
         
         if (estimatesError) throw estimatesError;
         
-        // Calculate totals for each estimate
         const estimatesWithTotals = await Promise.all(
           (estimatesData || []).map(async (estimate) => {
             const { data: products, error: productsError } = await supabase
@@ -152,7 +139,6 @@ const EstimatesList = () => {
     try {
       if (!user) return;
       
-      // Fetch the full estimate details
       const { data: estimateData, error: estimateError } = await supabase
         .from('estimates')
         .select('*')
@@ -161,7 +147,6 @@ const EstimatesList = () => {
         
       if (estimateError) throw estimateError;
       
-      // Fetch estimate products
       const { data: products, error: productsError } = await supabase
         .from('estimate_products')
         .select('*')
@@ -169,12 +154,11 @@ const EstimatesList = () => {
         
       if (productsError) throw productsError;
       
-      // Create new invoice based on the estimate
       const { data: invoiceData, error: invoiceError } = await supabase
         .from('invoices')
         .insert({
           user_id: user.id,
-          invoice_number: estimateData.estimate_number, // Use the same number for simplicity
+          invoice_number: estimateData.estimate_number,
           client_name: estimateData.client_name,
           client_email: estimateData.client_email,
           client_address: estimateData.client_address,
@@ -191,7 +175,6 @@ const EstimatesList = () => {
         
       if (invoiceError) throw invoiceError;
       
-      // Insert the products for the new invoice
       const invoiceProducts = products.map((product) => ({
         invoice_id: invoiceData.id,
         name: product.name,
@@ -207,7 +190,6 @@ const EstimatesList = () => {
         
       if (productInsertError) throw productInsertError;
       
-      // Update the estimate status to 'converted'
       const { error: updateError } = await supabase
         .from('estimates')
         .update({ status: 'converted' })
@@ -220,7 +202,6 @@ const EstimatesList = () => {
         description: "You can now view and edit the invoice.",
       });
       
-      // Navigate to the new invoice
       navigate(`/invoice/${invoiceData.id}`);
       
     } catch (error: any) {
@@ -234,44 +215,8 @@ const EstimatesList = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
-      <div className="bg-primary text-white p-4 mb-8">
-        <div className="container mx-auto px-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ReceiptText className="h-6 w-6" />
-            <h1 className="text-xl font-bold">Invoicing Genius</h1>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              asChild
-              className="text-white hover:text-white hover:bg-primary/80"
-            >
-              <Link to="/profile" className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                <span className="hidden md:inline">Profile Settings</span>
-              </Link>
-            </Button>
-            
-            <div className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              <span className="text-sm hidden md:inline">{userProfile?.full_name || user?.email}</span>
-            </div>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={signOut}
-              className="text-white hover:text-white hover:bg-primary/80"
-            >
-              <LogOut className="h-5 w-5 mr-2" />
-              <span className="hidden md:inline">Sign Out</span>
-            </Button>
-          </div>
-        </div>
-      </div>
-
+      <AppHeader userProfile={userProfile} />
+      
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
