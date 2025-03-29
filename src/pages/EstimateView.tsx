@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,13 +28,12 @@ import { Separator } from "@/components/ui/separator";
 import { 
   ArrowLeft, 
   Edit, 
-  Printer, 
-  Download, 
   Send, 
   CheckCircle,
   ArrowRightLeft,
   AlertTriangle,
 } from "lucide-react";
+import EstimateActionButtons from "@/components/EstimateActionButtons";
 
 // Utils
 import { 
@@ -243,6 +241,24 @@ const EstimateView = () => {
   const totalTax = calculateTotalTax(calculationProducts);
   const total = calculateTotal(calculationProducts);
 
+  // Create an Estimate object for the PDF generation
+  const estimateForPdf: any = {
+    details: {
+      estimateNumber: estimate.estimate_number,
+      date: estimate.date,
+      dueDate: estimate.due_date,
+      clientName: estimate.client_name,
+      clientEmail: estimate.client_email,
+      clientAddress: estimate.client_address,
+      yourCompany: estimate.your_company,
+      yourEmail: estimate.your_email,
+      yourAddress: estimate.your_address,
+    },
+    products: calculationProducts,
+    notes: estimate.notes,
+    status: estimate.status
+  };
+
   const getStatusBadgeStyle = (status: string) => {
     switch (status) {
       case "approved":
@@ -295,14 +311,7 @@ const EstimateView = () => {
                 Edit
               </Button>
               
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => window.print()}
-              >
-                <Printer className="h-4 w-4 mr-2" />
-                Print
-              </Button>
+              <EstimateActionButtons estimate={estimateForPdf} />
               
               {estimate.status === "draft" && (
                 <Button
@@ -328,8 +337,8 @@ const EstimateView = () => {
               )}
               
               {(estimate.status === "draft" || estimate.status === "sent" || estimate.status === "approved") && (
-                <Button
-                  size="sm"
+                <Button 
+                  className="w-full" 
                   onClick={handleConvertToInvoice}
                   disabled={isProcessing}
                 >
@@ -492,6 +501,9 @@ const EstimateView = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
+                  {/* Add PDF download buttons */}
+                  <EstimateActionButtons estimate={estimateForPdf} compact={true} />
+                  
                   {estimate.status === "draft" && (
                     <Button 
                       className="w-full" 
