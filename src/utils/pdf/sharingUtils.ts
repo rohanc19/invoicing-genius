@@ -54,14 +54,12 @@ export const shareDocumentViaWhatsApp = async (
       toast({
         title: "Continue to WhatsApp",
         description: "PDF downloaded. Click below to open WhatsApp and then attach the PDF manually.",
-        action: (
-          <ToastAction 
-            onClick={() => window.open(`https://wa.me/?text=${message}`, '_blank')}
-            altText="Continue to WhatsApp"
-          >
-            Continue to WhatsApp
-          </ToastAction>
-        ),
+        action: <ToastAction 
+                  onClick={() => window.open(`https://wa.me/?text=${message}`, '_blank')}
+                  altText="Continue to WhatsApp"
+                >
+                  Continue to WhatsApp
+                </ToastAction>,
         duration: 10000,
       });
     }, 1000);
