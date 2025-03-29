@@ -11,6 +11,9 @@ import Profile from "./pages/Profile";
 import InvoicesList from "./pages/InvoicesList";
 import CreateInvoice from "./pages/CreateInvoice";
 import InvoiceView from "./pages/InvoiceView";
+import EstimatesList from "./pages/EstimatesList";
+import CreateEstimate from "./pages/CreateEstimate";
+import EstimateView from "./pages/EstimateView";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
@@ -35,6 +38,11 @@ const App = () => (
               <Route path="/invoice/:id" element={<InvoiceView />} />
               <Route path="/invoice-editor" element={<Index />} />
               <Route path="/profile" element={<Profile />} />
+              {/* Estimate routes */}
+              <Route path="/estimates" element={<EstimatesList />} />
+              <Route path="/create-estimate" element={<CreateEstimate />} />
+              <Route path="/edit-estimate/:id" element={<CreateEstimate />} />
+              <Route path="/estimate/:id" element={<EstimateView />} />
             </Route>
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

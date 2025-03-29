@@ -36,6 +36,98 @@ export type Database = {
         }
         Relationships: []
       }
+      estimate_products: {
+        Row: {
+          discount: number | null
+          estimate_id: string
+          id: string
+          name: string
+          price: number
+          quantity: number
+          tax: number | null
+        }
+        Insert: {
+          discount?: number | null
+          estimate_id: string
+          id?: string
+          name: string
+          price: number
+          quantity: number
+          tax?: number | null
+        }
+        Update: {
+          discount?: number | null
+          estimate_id?: string
+          id?: string
+          name?: string
+          price?: number
+          quantity?: number
+          tax?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estimate_products_estimate_id_fkey"
+            columns: ["estimate_id"]
+            isOneToOne: false
+            referencedRelation: "estimates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estimates: {
+        Row: {
+          client_address: string | null
+          client_email: string | null
+          client_name: string
+          created_at: string | null
+          date: string | null
+          due_date: string | null
+          estimate_number: string
+          id: string
+          notes: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+          your_address: string | null
+          your_company: string | null
+          your_email: string | null
+        }
+        Insert: {
+          client_address?: string | null
+          client_email?: string | null
+          client_name: string
+          created_at?: string | null
+          date?: string | null
+          due_date?: string | null
+          estimate_number: string
+          id?: string
+          notes?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+          your_address?: string | null
+          your_company?: string | null
+          your_email?: string | null
+        }
+        Update: {
+          client_address?: string | null
+          client_email?: string | null
+          client_name?: string
+          created_at?: string | null
+          date?: string | null
+          due_date?: string | null
+          estimate_number?: string
+          id?: string
+          notes?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+          your_address?: string | null
+          your_company?: string | null
+          your_email?: string | null
+        }
+        Relationships: []
+      }
       invoice_products: {
         Row: {
           discount: number | null

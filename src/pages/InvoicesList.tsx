@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,7 +18,8 @@ import {
   ReceiptText,
   User,
   LogOut,
-  Settings
+  Settings,
+  FileBarChart
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Link, useNavigate } from "react-router-dom";
@@ -34,7 +34,6 @@ interface InvoiceListItem {
   date: string;
   due_date: string;
   total_amount?: number;
-  // Update the status type to accept any string instead of just 'paid' | 'unpaid'
   status: string;
 }
 
@@ -82,7 +81,6 @@ const InvoicesList = () => {
         
         setIsLoading(true);
         
-        // Fetch invoices with products to calculate totals
         const { data: invoicesData, error: invoicesError } = await supabase
           .from('invoices')
           .select(`
@@ -98,7 +96,6 @@ const InvoicesList = () => {
         
         if (invoicesError) throw invoicesError;
         
-        // Calculate totals for each invoice
         const invoicesWithTotals = await Promise.all(
           (invoicesData || []).map(async (invoice) => {
             const { data: products, error: productsError } = await supabase
@@ -118,7 +115,6 @@ const InvoicesList = () => {
             return {
               ...invoice,
               total_amount: total,
-              // Ensure status is a string (it already is, but this makes TypeScript happy)
               status: invoice.status || 'unpaid'
             };
           })
@@ -195,10 +191,22 @@ const InvoicesList = () => {
             <h2 className="text-2xl font-bold">My Invoices</h2>
           </div>
           
-          <Button onClick={createNewInvoice}>
-            <Plus className="h-5 w-5 mr-2" />
-            Create New Invoice
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline"
+              asChild
+            >
+              <Link to="/estimates">
+                <FileBarChart className="h-5 w-5 mr-2" />
+                View Estimates
+              </Link>
+            </Button>
+            
+            <Button onClick={createNewInvoice}>
+              <Plus className="h-5 w-5 mr-2" />
+              Create New Invoice
+            </Button>
+          </div>
         </div>
         
         <Card>
