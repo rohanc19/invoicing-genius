@@ -1,3 +1,4 @@
+
 import { Estimate } from "../types/estimate";
 import { calculateProductTotal, calculateSubtotal, calculateTotal, calculateTotalDiscount, calculateTotalTax, formatCurrency } from "./calculations";
 import jsPDF from "jspdf";
@@ -9,9 +10,7 @@ import {
   addProductTable, 
   addSummaryBox, 
   addNotes, 
-  addFooter,
-  shareDocumentViaWhatsApp,
-  createEmailLink
+  addFooter
 } from "./pdf";
 
 // Export this function for use in ActionButtons component
@@ -104,58 +103,7 @@ const printEstimatePDF = (estimate: Estimate) => {
   }
 };
 
-export const shareEstimatePDF = async (estimate: Estimate) => {
-  const doc = generateEstimatePDF(estimate);
-  const pdfBlob = doc.output('blob');
-  
-  if (navigator.share) {
-    const file = new File([pdfBlob], `Estimate_${estimate.details.estimateNumber}.pdf`, { type: 'application/pdf' });
-    
-    try {
-      await navigator.share({
-        files: [file],
-        title: `Estimate ${estimate.details.estimateNumber}`,
-        text: `Estimate for ${estimate.details.clientName}`,
-      });
-      return true;
-    } catch (error) {
-      console.error('Error sharing the estimate', error);
-      return false;
-    }
-  } else {
-    // Fallback for browsers without Web Share API
-    const url = URL.createObjectURL(pdfBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Estimate_${estimate.details.estimateNumber}.pdf`;
-    link.click();
-    URL.revokeObjectURL(url);
-    return true;
-  }
-};
-
-// Fixed WhatsApp sharing functionality to properly share the PDF
-export const shareEstimateViaWhatsApp = async (estimate: Estimate) => {
-  const doc = generateEstimatePDF(estimate);
-  const pdfBlob = doc.output('blob');
-  
-  return shareDocumentViaWhatsApp(
-    pdfBlob,
-    `Estimate_${estimate.details.estimateNumber}.pdf`,
-    estimate.details.clientName,
-    'Estimate',
-    estimate.details.estimateNumber,
-    formatCurrency(calculateTotal(estimate.products))
-  );
-};
-
-// Helper for email sharing
-export const shareEstimateViaEmail = (estimate: Estimate) => {
-  return createEmailLink(
-    estimate.details.clientEmail,
-    'Estimate',
-    estimate.details.estimateNumber,
-    estimate.details.yourCompany,
-    estimate.details.clientName
-  );
-};
+// Export empty functions to maintain compatibility
+export const shareEstimatePDF = async () => false;
+export const shareEstimateViaWhatsApp = async () => false;
+export const shareEstimateViaEmail = () => '';

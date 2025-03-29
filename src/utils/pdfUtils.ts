@@ -1,3 +1,4 @@
+
 import { Invoice } from "../types/invoice";
 import { calculateProductTotal, calculateSubtotal, calculateTotal, calculateTotalDiscount, calculateTotalTax, formatCurrency } from "./calculations";
 import jsPDF from "jspdf";
@@ -9,9 +10,7 @@ import {
   addProductTable, 
   addSummaryBox, 
   addNotes, 
-  addFooter,
-  shareDocumentViaWhatsApp,
-  createEmailLink
+  addFooter
 } from "./pdf";
 
 // Export this function for use in ActionButtons component
@@ -104,58 +103,7 @@ const printInvoicePDF = (invoice: Invoice) => {
   }
 };
 
-export const shareInvoicePDF = async (invoice: Invoice) => {
-  const doc = generateInvoicePDF(invoice);
-  const pdfBlob = doc.output('blob');
-  
-  if (navigator.share) {
-    const file = new File([pdfBlob], `Invoice_${invoice.details.invoiceNumber}.pdf`, { type: 'application/pdf' });
-    
-    try {
-      await navigator.share({
-        files: [file],
-        title: `Invoice ${invoice.details.invoiceNumber}`,
-        text: `Invoice for ${invoice.details.clientName}`,
-      });
-      return true;
-    } catch (error) {
-      console.error('Error sharing the invoice', error);
-      return false;
-    }
-  } else {
-    // Fallback for browsers without Web Share API
-    const url = URL.createObjectURL(pdfBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Invoice_${invoice.details.invoiceNumber}.pdf`;
-    link.click();
-    URL.revokeObjectURL(url);
-    return true;
-  }
-};
-
-// Fixed WhatsApp sharing functionality to properly share the PDF
-export const shareInvoiceViaWhatsApp = async (invoice: Invoice) => {
-  const doc = generateInvoicePDF(invoice);
-  const pdfBlob = doc.output('blob');
-  
-  return shareDocumentViaWhatsApp(
-    pdfBlob,
-    `Invoice_${invoice.details.invoiceNumber}.pdf`,
-    invoice.details.clientName,
-    'Invoice',
-    invoice.details.invoiceNumber,
-    formatCurrency(calculateTotal(invoice.products))
-  );
-};
-
-// Helper for email sharing
-export const shareInvoiceViaEmail = (invoice: Invoice) => {
-  return createEmailLink(
-    invoice.details.clientEmail,
-    'Invoice',
-    invoice.details.invoiceNumber,
-    invoice.details.yourCompany,
-    invoice.details.clientName
-  );
-};
+// Export empty functions to maintain compatibility
+export const shareInvoicePDF = async () => false;
+export const shareInvoiceViaWhatsApp = async () => false;
+export const shareInvoiceViaEmail = () => '';

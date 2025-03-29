@@ -5,17 +5,8 @@ import {
   Printer, 
   Save, 
   FileText, 
-  Download, 
-  Share, 
-  MessageCircle, 
-  Mail 
+  Download
 } from "lucide-react";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 
 interface DocumentActionButtonsProps {
@@ -26,9 +17,6 @@ interface DocumentActionButtonsProps {
   onSave?: () => Promise<void>;
   onPrint: () => void;
   onDownload: () => void;
-  onShare: () => Promise<void>;
-  onWhatsAppShare: () => Promise<void>;
-  onEmailShare: () => void;
   showSaveButton?: boolean;
 }
 
@@ -40,15 +28,9 @@ const DocumentActionButtons: React.FC<DocumentActionButtonsProps> = ({
   onSave,
   onPrint,
   onDownload,
-  onShare,
-  onWhatsAppShare,
-  onEmailShare,
   showSaveButton = false,
 }) => {
   const [isSaving, setIsSaving] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
-  const [isWhatsAppSharing, setIsWhatsAppSharing] = useState(false);
-  const [isEmailSharing, setIsEmailSharing] = useState(false);
 
   const handlePrint = () => {
     onPrint();
@@ -56,51 +38,6 @@ const DocumentActionButtons: React.FC<DocumentActionButtonsProps> = ({
 
   const handleDownload = () => {
     onDownload();
-  };
-
-  const handleShare = async () => {
-    setIsSharing(true);
-    try {
-      await onShare();
-    } catch (error) {
-      toast({
-        title: `${documentType === 'invoice' ? 'Invoice' : 'Estimate'} sharing failed`,
-        description: `Could not share the ${documentType}. Please try again.`,
-        variant: "destructive",
-      });
-    } finally {
-      setIsSharing(false);
-    }
-  };
-  
-  const handleWhatsAppShare = async () => {
-    setIsWhatsAppSharing(true);
-    try {
-      await onWhatsAppShare();
-    } catch (error) {
-      toast({
-        title: "WhatsApp sharing failed",
-        description: `Could not share via WhatsApp. Please try again.`,
-        variant: "destructive",
-      });
-    } finally {
-      setIsWhatsAppSharing(false);
-    }
-  };
-
-  const handleEmailShare = () => {
-    setIsEmailSharing(true);
-    try {
-      onEmailShare();
-    } catch (error) {
-      toast({
-        title: "Email sharing failed",
-        description: "Could not share via email. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsEmailSharing(false);
-    }
   };
 
   const handleSave = async () => {
@@ -141,42 +78,6 @@ const DocumentActionButtons: React.FC<DocumentActionButtonsProps> = ({
           <Download className="h-4 w-4 mr-2" />
           Download PDF
         </Button>
-        
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button 
-              className="w-full" 
-              variant="outline"
-              disabled={isSharing || isWhatsAppSharing || isEmailSharing}
-            >
-              <Share className="h-4 w-4 mr-2" />
-              {isSharing || isWhatsAppSharing || isEmailSharing ? "Sharing..." : `Share ${documentType === 'invoice' ? 'Invoice' : 'Estimate'}`}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            {navigator.share && (
-              <DropdownMenuItem onClick={handleShare} disabled={isSharing || isWhatsAppSharing || isEmailSharing}>
-                <Share className="h-4 w-4 mr-2" />
-                Share
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem 
-              onClick={handleWhatsAppShare} 
-              disabled={isSharing || isWhatsAppSharing || isEmailSharing}
-              className="flex items-center"
-            >
-              <MessageCircle className="h-4 w-4 mr-2" />
-              {isWhatsAppSharing ? "Processing..." : "WhatsApp"}
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={handleEmailShare} 
-              disabled={isSharing || isWhatsAppSharing || isEmailSharing}
-            >
-              <Mail className="h-4 w-4 mr-2" />
-              {isEmailSharing ? "Opening Email..." : "Email"}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     );
   }
@@ -222,42 +123,6 @@ const DocumentActionButtons: React.FC<DocumentActionButtonsProps> = ({
         <Download className={showSaveButton ? "h-5 w-5" : "h-4 w-4 mr-2"} />
         <span>Download PDF</span>
       </Button>
-      
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="outline" 
-            size={showSaveButton ? "default" : "sm"}
-            disabled={disabled || isSharing || isWhatsAppSharing || isEmailSharing}
-            className={showSaveButton ? "flex items-center gap-2" : ""}
-          >
-            <Share className={showSaveButton ? "h-5 w-5" : "h-4 w-4 mr-2"} />
-            <span>{isSharing || isWhatsAppSharing || isEmailSharing ? "Sharing..." : "Share"}</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          {navigator.share && (
-            <DropdownMenuItem onClick={handleShare} disabled={isSharing || isWhatsAppSharing || isEmailSharing}>
-              <Share className="h-4 w-4 mr-2" />
-              Share
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem 
-            onClick={handleWhatsAppShare} 
-            disabled={isSharing || isWhatsAppSharing || isEmailSharing}
-          >
-            <MessageCircle className="h-4 w-4 mr-2" />
-            {isWhatsAppSharing ? "Processing..." : "WhatsApp"}
-          </DropdownMenuItem>
-          <DropdownMenuItem 
-            onClick={handleEmailShare} 
-            disabled={isSharing || isWhatsAppSharing || isEmailSharing}
-          >
-            <Mail className="h-4 w-4 mr-2" />
-            {isEmailSharing ? "Opening Email..." : "Email"}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
       
       {showSaveButton && onSave && (
         <Button 

@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Invoice } from "../types/invoice";
-import { exportToPDF, shareInvoicePDF, shareInvoiceViaWhatsApp, shareInvoiceViaEmail } from "../utils/pdfUtils";
+import { exportToPDF } from "../utils/pdfUtils";
 import { exportToExcel } from "../utils/exportUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -78,9 +78,6 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ invoice, disabled }) => {
       disabled={disabled}
       onPrint={() => exportToPDF(invoice)}
       onDownload={() => exportToPDF(invoice, true)}
-      onShare={() => shareInvoicePDF(invoice)}
-      onWhatsAppShare={() => shareInvoiceViaWhatsApp(invoice)}
-      onEmailShare={() => window.location.href = shareInvoiceViaEmail(invoice)}
       onSave={handleSave}
       showSaveButton={true}
     />

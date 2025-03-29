@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Estimate } from "../types/estimate";
-import { exportEstimateToPDF, shareEstimatePDF, shareEstimateViaWhatsApp, shareEstimateViaEmail } from "../utils/estimatePdfUtils";
+import { exportEstimateToPDF } from "../utils/estimatePdfUtils";
 import DocumentActionButtons from "./DocumentActionButtons";
 
 interface EstimateActionButtonsProps {
@@ -20,9 +20,6 @@ const EstimateActionButtons: React.FC<EstimateActionButtonsProps> = ({
       compact={compact}
       onPrint={() => exportEstimateToPDF(estimate)}
       onDownload={() => exportEstimateToPDF(estimate, true)}
-      onShare={() => shareEstimatePDF(estimate)}
-      onWhatsAppShare={() => shareEstimateViaWhatsApp(estimate)}
-      onEmailShare={() => window.location.href = shareEstimateViaEmail(estimate)}
     />
   );
 };
