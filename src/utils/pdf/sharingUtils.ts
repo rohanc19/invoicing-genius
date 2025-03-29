@@ -1,7 +1,6 @@
 
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
-import React from "react";
 
 // Improved function to share a document via WhatsApp
 export const shareDocumentViaWhatsApp = async (
