@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,16 +28,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Estimate, EstimateDetails, EstimateProduct } from "@/types/estimate";
-
-interface Product {
-  id: string;
-  name: string;
-  quantity: number;
-  price: number;
-  tax: number;
-  discount: number;
-}
+import { EstimateDetails, EstimateProduct } from "@/types/estimate";
+import { Product } from "@/types/invoice";
 
 const CreateEstimate = () => {
   const { user } = useAuth();
@@ -80,7 +71,6 @@ const CreateEstimate = () => {
       fetchEstimate(id);
     }
     
-    // If user profile exists, populate your company details
     const fetchUserProfile = async () => {
       try {
         if (!user) return;
@@ -97,8 +87,8 @@ const CreateEstimate = () => {
           setEstimateDetails(prevState => ({
             ...prevState,
             yourCompany: data.company_name || "",
-            yourEmail: data.email || user.email || "",
-            yourAddress: data.address || ""
+            yourEmail: data.company_email || user.email || "",
+            yourAddress: data.company_address || ""
           }));
         }
       } catch (error: any) {
@@ -207,7 +197,6 @@ const CreateEstimate = () => {
       let estimateId;
       
       if (isEditMode && id) {
-        // Update existing estimate
         const { data, error } = await supabase
           .from('estimates')
           .update(estimateData)
@@ -218,7 +207,6 @@ const CreateEstimate = () => {
         if (error) throw error;
         estimateId = data.id;
         
-        // First delete all existing products
         const { error: deleteError } = await supabase
           .from('estimate_products')
           .delete()
@@ -226,7 +214,6 @@ const CreateEstimate = () => {
           
         if (deleteError) throw deleteError;
       } else {
-        // Create new estimate
         const { data, error } = await supabase
           .from('estimates')
           .insert([estimateData])
@@ -237,7 +224,6 @@ const CreateEstimate = () => {
         estimateId = data.id;
       }
       
-      // Insert all products
       const productsToInsert = products.map(product => ({
         estimate_id: estimateId,
         name: product.name,
@@ -256,7 +242,6 @@ const CreateEstimate = () => {
       toast.success(isEditMode ? "Estimate updated successfully" : "Estimate created successfully");
       setHasChanges(false);
       
-      // Navigate to estimate view
       navigate(`/estimate/${estimateId}`);
       
     } catch (error: any) {
@@ -277,7 +262,6 @@ const CreateEstimate = () => {
       
       setIsLoading(true);
       
-      // Create invoice from estimate data
       const invoiceData = {
         user_id: user.id,
         invoice_number: `INV-${Math.floor(100000 + Math.random() * 900000)}`,
@@ -293,7 +277,6 @@ const CreateEstimate = () => {
         status: 'unpaid'
       };
       
-      // Insert invoice
       const { data: invoiceData2, error: invoiceError } = await supabase
         .from('invoices')
         .insert([invoiceData])
@@ -304,7 +287,6 @@ const CreateEstimate = () => {
       
       const invoiceId = invoiceData2.id;
       
-      // Convert products to invoice products
       const invoiceProducts = products.map(product => ({
         invoice_id: invoiceId,
         name: product.name,
@@ -314,14 +296,12 @@ const CreateEstimate = () => {
         discount: product.discount
       }));
       
-      // Insert invoice products
       const { error: productsError } = await supabase
         .from('invoice_products')
         .insert(invoiceProducts);
         
       if (productsError) throw productsError;
       
-      // Update estimate status to 'converted'
       const { error: updateError } = await supabase
         .from('estimates')
         .update({ status: 'converted' })
@@ -331,7 +311,6 @@ const CreateEstimate = () => {
       
       toast.success("Estimate converted to invoice successfully");
       
-      // Navigate to the new invoice
       navigate(`/invoice/${invoiceId}`);
       
     } catch (error: any) {
@@ -342,12 +321,12 @@ const CreateEstimate = () => {
       setIsLoading(false);
     }
   };
-  
+
   const handleUpdateProducts = (updatedProducts: Product[]) => {
     setProducts(updatedProducts);
     setHasChanges(true);
   };
-  
+
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
       <div className="bg-primary text-white p-4 mb-8">
