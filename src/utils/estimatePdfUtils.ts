@@ -1,4 +1,3 @@
-
 import { Estimate } from "../types/estimate";
 import { calculateProductTotal, calculateSubtotal, calculateTotal, calculateTotalDiscount, calculateTotalTax, formatCurrency } from "./calculations";
 import jsPDF from "jspdf";
@@ -72,7 +71,7 @@ const generateEstimatePDF = (estimate: Estimate) => {
   
   doc.setFont('helvetica', 'normal');
   doc.text(`Date: ${estimate.details.date}`, 140, 40);
-  doc.text(`Expiry Date: ${estimate.details.expiryDate}`, 140, 45);
+  doc.text(`Expiry Date: ${estimate.details.dueDate}`, 140, 45);
   
   // Add separator line
   doc.setDrawColor(220, 220, 220);
