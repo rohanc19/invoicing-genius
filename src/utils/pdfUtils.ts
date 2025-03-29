@@ -1,3 +1,4 @@
+
 import { Invoice } from "../types/invoice";
 import { calculateProductTotal, calculateSubtotal, calculateTotal, calculateTotalDiscount, calculateTotalTax, formatCurrency } from "./calculations";
 import jsPDF from "jspdf";
@@ -32,7 +33,7 @@ const generateInvoicePDF = (invoice: Invoice) => {
   });
   
   // Add styled header
-  doc.setFillColor(40, 99, 235); // primary blue
+  doc.setFillColor(0, 0, 0); // changed from blue to black
   doc.rect(0, 0, doc.internal.pageSize.getWidth(), 25, 'F');
   
   doc.setTextColor(255, 255, 255);
@@ -106,7 +107,7 @@ const generateInvoicePDF = (invoice: Invoice) => {
       lineWidth: 0.1
     },
     headStyles: { 
-      fillColor: [40, 99, 235],
+      fillColor: [0, 0, 0], // changed from blue to black
       textColor: [255, 255, 255],
       fontStyle: 'bold',
       halign: 'center'
@@ -150,7 +151,7 @@ const generateInvoicePDF = (invoice: Invoice) => {
   doc.line(125, finalY + 28, 190, finalY + 28);
   
   doc.setFontSize(11);
-  doc.setTextColor(40, 99, 235);
+  doc.setTextColor(0, 0, 0); // changed from blue to black
   doc.setFont('helvetica', 'bold');
   doc.text(`Total:`, 125, finalY + 36);
   doc.text(`${formatCurrency(calculateTotal(invoice.products))}`, 190, finalY + 36, { align: 'right' });
@@ -245,8 +246,9 @@ export const shareInvoicePDF = async (invoice: Invoice) => {
   }
 };
 
-// Add WhatsApp sharing functionality
+// Fixed WhatsApp sharing functionality
 export const shareInvoiceViaWhatsApp = async (invoice: Invoice) => {
+  // First, generate and download the PDF
   const doc = generateInvoicePDF(invoice);
   const pdfBlob = doc.output('blob');
   const pdfUrl = URL.createObjectURL(pdfBlob);
@@ -256,6 +258,9 @@ export const shareInvoiceViaWhatsApp = async (invoice: Invoice) => {
   tempLink.href = pdfUrl;
   tempLink.download = `Invoice_${invoice.details.invoiceNumber}.pdf`;
   tempLink.click();
+  
+  // Allow a moment for the download to start
+  await new Promise(resolve => setTimeout(resolve, 300));
   
   // Construct the WhatsApp message
   const message = encodeURIComponent(
@@ -272,7 +277,7 @@ export const shareInvoiceViaWhatsApp = async (invoice: Invoice) => {
   // Clean up
   setTimeout(() => {
     URL.revokeObjectURL(pdfUrl);
-  }, 100);
+  }, 1000);
   
   return true;
 };

@@ -1,3 +1,4 @@
+
 import { Estimate } from "../types/estimate";
 import { calculateProductTotal, calculateSubtotal, calculateTotal, calculateTotalDiscount, calculateTotalTax, formatCurrency } from "./calculations";
 import jsPDF from "jspdf";
@@ -32,7 +33,7 @@ const generateEstimatePDF = (estimate: Estimate) => {
   });
   
   // Add styled header
-  doc.setFillColor(40, 99, 235); // primary blue
+  doc.setFillColor(0, 0, 0); // Set to black color theme
   doc.rect(0, 0, doc.internal.pageSize.getWidth(), 25, 'F');
   
   doc.setTextColor(255, 255, 255);
@@ -58,7 +59,7 @@ const generateEstimatePDF = (estimate: Estimate) => {
   
   // Add client information
   doc.setFont('helvetica', 'bold');
-  doc.text(`TO:`, 14, 65);
+  doc.text(`FOR:`, 14, 65);
   
   doc.setFont('helvetica', 'normal');
   doc.text(`${estimate.details.clientName}`, 14, 70);
@@ -71,8 +72,7 @@ const generateEstimatePDF = (estimate: Estimate) => {
   
   doc.setFont('helvetica', 'normal');
   doc.text(`Date: ${estimate.details.date}`, 140, 40);
-  doc.text(`Due Date: ${estimate.details.dueDate}`, 140, 45);
-  doc.text(`Status: ${estimate.status ? estimate.status.charAt(0).toUpperCase() + estimate.status.slice(1) : 'Draft'}`, 140, 50);
+  doc.text(`Expiry Date: ${estimate.details.expiryDate}`, 140, 45);
   
   // Add separator line
   doc.setDrawColor(220, 220, 220);
@@ -107,7 +107,7 @@ const generateEstimatePDF = (estimate: Estimate) => {
       lineWidth: 0.1
     },
     headStyles: { 
-      fillColor: [40, 99, 235],
+      fillColor: [0, 0, 0], // Changed from blue to black
       textColor: [255, 255, 255],
       fontStyle: 'bold',
       halign: 'center'
@@ -151,7 +151,7 @@ const generateEstimatePDF = (estimate: Estimate) => {
   doc.line(125, finalY + 28, 190, finalY + 28);
   
   doc.setFontSize(11);
-  doc.setTextColor(40, 99, 235);
+  doc.setTextColor(0, 0, 0); // Changed from blue to black
   doc.setFont('helvetica', 'bold');
   doc.text(`Total:`, 125, finalY + 36);
   doc.text(`${formatCurrency(calculateTotal(estimate.products))}`, 190, finalY + 36, { align: 'right' });
@@ -187,7 +187,7 @@ const generateEstimatePDF = (estimate: Estimate) => {
   doc.setFontSize(8);
   doc.setTextColor(120, 120, 120);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Thank you for considering our proposal! If you have any questions, please contact us at ${estimate.details.yourEmail}`, 
+  doc.text(`Thank you for your business! If you have any questions, please contact us at ${estimate.details.yourEmail}`, 
     doc.internal.pageSize.getWidth() / 2, pageHeight - 12, { align: 'center' });
   
   doc.setTextColor(150, 150, 150);
@@ -246,8 +246,9 @@ export const shareEstimatePDF = async (estimate: Estimate) => {
   }
 };
 
-// Add WhatsApp sharing functionality
+// Fixed WhatsApp sharing functionality
 export const shareEstimateViaWhatsApp = async (estimate: Estimate) => {
+  // First, generate and download the PDF
   const doc = generateEstimatePDF(estimate);
   const pdfBlob = doc.output('blob');
   const pdfUrl = URL.createObjectURL(pdfBlob);
@@ -257,6 +258,9 @@ export const shareEstimateViaWhatsApp = async (estimate: Estimate) => {
   tempLink.href = pdfUrl;
   tempLink.download = `Estimate_${estimate.details.estimateNumber}.pdf`;
   tempLink.click();
+  
+  // Allow a moment for the download to start
+  await new Promise(resolve => setTimeout(resolve, 300));
   
   // Construct the WhatsApp message
   const message = encodeURIComponent(
@@ -273,7 +277,7 @@ export const shareEstimateViaWhatsApp = async (estimate: Estimate) => {
   // Clean up
   setTimeout(() => {
     URL.revokeObjectURL(pdfUrl);
-  }, 100);
+  }, 1000);
   
   return true;
 };

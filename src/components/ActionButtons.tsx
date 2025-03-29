@@ -1,7 +1,21 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Printer, Save, FileText, Download, MessageCircle } from "lucide-react";
+import { 
+  Printer, 
+  Save, 
+  FileText, 
+  Download, 
+  Share, 
+  MessageCircle, 
+  Mail 
+} from "lucide-react";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Invoice } from "../types/invoice";
 import { exportToPDF, shareInvoicePDF, shareInvoiceViaWhatsApp } from "../utils/pdfUtils";
 import { exportToExcel } from "../utils/exportUtils";
@@ -17,6 +31,7 @@ interface ActionButtonsProps {
 const ActionButtons: React.FC<ActionButtonsProps> = ({ invoice, disabled }) => {
   const { user } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   
   const handleSave = async () => {
     if (!user) {
@@ -87,7 +102,20 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ invoice, disabled }) => {
   };
 
   const handleWhatsAppShare = async () => {
-    await shareInvoiceViaWhatsApp(invoice);
+    setIsSharing(true);
+    try {
+      await shareInvoiceViaWhatsApp(invoice);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleEmailShare = () => {
+    const subject = encodeURIComponent(`Invoice ${invoice.details.invoiceNumber}`);
+    const body = encodeURIComponent(
+      `Hello ${invoice.details.clientName},\n\nPlease find attached the invoice ${invoice.details.invoiceNumber}.\n\nBest regards,\n${invoice.details.yourCompany}`
+    );
+    window.location.href = `mailto:${invoice.details.clientEmail}?subject=${subject}&body=${body}`;
   };
 
   return (
@@ -122,15 +150,41 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ invoice, disabled }) => {
         <span>Download PDF</span>
       </Button>
       
-      <Button 
-        variant="outline" 
-        disabled={disabled} 
-        onClick={handleWhatsAppShare}
-        className="flex items-center gap-2"
-      >
-        <MessageCircle className="h-5 w-5" />
-        <span>WhatsApp</span>
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button 
+            variant="outline" 
+            disabled={disabled || isSharing}
+            className="flex items-center gap-2"
+          >
+            <Share className="h-5 w-5" />
+            <span>{isSharing ? "Sharing..." : "Share"}</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          {navigator.share && (
+            <DropdownMenuItem onClick={async () => {
+              setIsSharing(true);
+              try {
+                await shareInvoicePDF(invoice);
+              } finally {
+                setIsSharing(false);
+              }
+            }}>
+              <Share className="h-4 w-4 mr-2" />
+              Share
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem onClick={handleWhatsAppShare}>
+            <MessageCircle className="h-4 w-4 mr-2" />
+            WhatsApp
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleEmailShare}>
+            <Mail className="h-4 w-4 mr-2" />
+            Email
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       
       <Button 
         disabled={disabled || isSaving} 
