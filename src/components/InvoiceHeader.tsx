@@ -20,7 +20,8 @@ const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({ details, setDetails }) =>
     <Card className="mb-6">
       <CardContent className="pt-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
+          {/* Hide the company information section since we're using CompanySelector */}
+          <div className="space-y-4 hidden">
             <div>
               <Label htmlFor="yourCompany">Your Company</Label>
               <Input
@@ -86,6 +87,8 @@ const InvoiceHeader: React.FC<InvoiceHeaderProps> = ({ details, setDetails }) =>
                 onChange={handleChange}
               />
             </div>
+          </div>
+          <div className="space-y-4">
             <div>
               <Label htmlFor="clientName">Client Name</Label>
               <Input

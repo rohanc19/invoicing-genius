@@ -11,13 +11,14 @@ import {
   ReceiptText,
   LogOut,
   User,
-  Building
+  Settings
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import CompanySelector from "@/components/CompanySelector";
 
 const Index = () => {
   const { user, signOut } = useAuth();
@@ -69,14 +70,6 @@ const Index = () => {
         
         if (data) {
           setUserProfile(data);
-          
-          // Pre-fill company details if available
-          setDetails(prev => ({
-            ...prev,
-            yourCompany: data.company_name || "",
-            yourEmail: data.company_email || user.email || "",
-            yourAddress: data.company_address || "",
-          }));
         }
       } catch (error: any) {
         toast({
@@ -89,6 +82,20 @@ const Index = () => {
     
     fetchUserProfile();
   }, [user]);
+
+  // Handle company selection
+  const handleCompanySelect = (companyDetails: { 
+    company_name: string; 
+    company_email: string; 
+    company_address: string;
+  }) => {
+    setDetails(prev => ({
+      ...prev,
+      yourCompany: companyDetails.company_name,
+      yourEmail: companyDetails.company_email,
+      yourAddress: companyDetails.company_address,
+    }));
+  };
 
   // Compute if form is valid
   const isFormValid = 
@@ -121,8 +128,8 @@ const Index = () => {
               className="text-white hover:text-white hover:bg-primary/80"
             >
               <Link to="/profile" className="flex items-center gap-2">
-                <Building className="h-5 w-5" />
-                <span className="hidden md:inline">Company Profile</span>
+                <Settings className="h-5 w-5" />
+                <span className="hidden md:inline">Profile Settings</span>
               </Link>
             </Button>
             
@@ -148,6 +155,19 @@ const Index = () => {
         <div className="flex items-center gap-2 mb-6">
           <File className="h-5 w-5 text-primary" />
           <h2 className="text-2xl font-bold">Create Invoice</h2>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <CompanySelector 
+              onCompanySelect={handleCompanySelect} 
+              currentCompany={{
+                company_name: details.yourCompany,
+                company_email: details.yourEmail,
+                company_address: details.yourAddress
+              }}
+            />
+          </div>
         </div>
         
         <InvoiceHeader details={details} setDetails={setDetails} />
