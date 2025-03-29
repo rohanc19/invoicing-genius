@@ -7,7 +7,11 @@ const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/favicon.ico'
+  '/favicon.ico',
+  // Add CSS and JS files that are generated during build
+  // These paths will match what Vite produces
+  '/assets/index-*.css',
+  '/assets/index-*.js'
 ];
 
 // Install the service worker and cache the static assets
@@ -15,6 +19,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
+        console.log('Opened cache');
         return cache.addAll(urlsToCache);
       })
   );
@@ -28,6 +33,7 @@ self.addEventListener('activate', event => {
         cacheNames.filter(cacheName => {
           return cacheName !== CACHE_NAME;
         }).map(cacheName => {
+          console.log('Deleting old cache:', cacheName);
           return caches.delete(cacheName);
         })
       );
@@ -62,7 +68,13 @@ self.addEventListener('fetch', event => {
             
             return response;
           }
-        );
+        ).catch(() => {
+          // If offline and no cache, return a custom offline page
+          // or fall back to the cached home page
+          if (event.request.mode === 'navigate') {
+            return caches.match('/');
+          }
+        });
       })
   );
 });
@@ -77,5 +89,12 @@ self.addEventListener('fetch', event => {
         return caches.match('/');
       })
     );
+  }
+});
+
+// Update cache on resource update
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
   }
 });
