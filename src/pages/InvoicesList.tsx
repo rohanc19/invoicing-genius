@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,7 +19,8 @@ import {
   User,
   LogOut,
   Settings,
-  FileBarChart
+  FileBarChart,
+  Download
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Link, useNavigate } from "react-router-dom";
@@ -43,7 +43,56 @@ const InvoicesList = () => {
   const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [showInstallButton, setShowInstallButton] = useState<boolean>(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const isAppInstalled = window.matchMedia('(display-mode: standalone)').matches;
+    
+    if (isAppInstalled) {
+      setShowInstallButton(false);
+      return;
+    }
+
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallButton(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      toast({
+        title: "Installation",
+        description: "To install, use your browser's 'Add to Home Screen' or 'Install' option in the menu.",
+      });
+      return;
+    }
+
+    deferredPrompt.prompt();
+    
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    setDeferredPrompt(null);
+    setShowInstallButton(false);
+    
+    console.log(`User ${outcome === 'accepted' ? 'accepted' : 'dismissed'} the install prompt`);
+    
+    if (outcome === 'accepted') {
+      toast({
+        title: "Installation Successful",
+        description: "The app was successfully installed on your device.",
+      });
+    }
+  };
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -155,6 +204,18 @@ const InvoicesList = () => {
           </Link>
           
           <div className="flex items-center gap-4">
+            {showInstallButton && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleInstallClick}
+                className="bg-white text-primary hover:bg-gray-100"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Install App
+              </Button>
+            )}
+            
             <Button
               variant="ghost"
               size="sm"
