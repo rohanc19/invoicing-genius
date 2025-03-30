@@ -1,5 +1,6 @@
 
 import { toast } from '@/hooks/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 
 export function register() {
   if ('serviceWorker' in navigator) {
@@ -30,10 +31,7 @@ export function register() {
                   toast({
                     title: 'Update Available',
                     description: 'A new version of the app is available. Please refresh to update.',
-                    action: {
-                      label: 'Refresh Now',
-                      onClick: () => window.location.reload()
-                    },
+                    action: <ToastAction altText="Refresh Now" onClick={() => window.location.reload()}>Refresh Now</ToastAction>,
                     duration: 10000, // Show for 10 seconds
                   });
                 } else {
