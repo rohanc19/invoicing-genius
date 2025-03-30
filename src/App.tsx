@@ -14,6 +14,7 @@ import InvoiceView from "./pages/InvoiceView";
 import EstimatesList from "./pages/EstimatesList";
 import CreateEstimate from "./pages/CreateEstimate";
 import EstimateView from "./pages/EstimateView";
+import InstallApp from "./pages/InstallApp";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import OfflineNotice from "./components/OfflineNotice";
@@ -30,6 +31,7 @@ const App = () => (
           <OfflineNotice />
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/install-app" element={<InstallApp />} />
             
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
