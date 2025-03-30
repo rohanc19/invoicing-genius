@@ -2,12 +2,58 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { ReceiptText, FileBarChart } from 'lucide-react';
+import { ReceiptText, FileBarChart, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AppHeader from '@/components/AppHeader';
+import { toast } from "@/hooks/use-toast";
 
 const Index = () => {
   const { user } = useAuth();
+
+  const handleInstallClick = () => {
+    console.log("Install button clicked on homepage");
+    
+    // Check if running in standalone mode already
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    if (isStandalone) {
+      toast({
+        title: "Already Installed",
+        description: "This app is already installed on your device.",
+      });
+      return;
+    }
+    
+    // Show installation instructions based on browser
+    const ua = navigator.userAgent.toLowerCase();
+    const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua);
+    const isChrome = ua.indexOf('chrome') > -1;
+    const isSafari = ua.indexOf('safari') > -1 && ua.indexOf('chrome') === -1;
+    const isEdge = ua.indexOf('edge') > -1 || ua.indexOf('edg') > -1;
+    
+    let message = "";
+    if (isMobile) {
+      if (isSafari && /iphone|ipad|ipod/.test(ua)) {
+        message = "Tap the share icon and select 'Add to Home Screen'";
+      } else if (isChrome) {
+        message = "Tap the menu button and select 'Add to Home Screen'";
+      } else {
+        message = "Use your browser's menu to add this app to your home screen";
+      }
+    } else {
+      if (isChrome || isEdge) {
+        message = "Click the install icon in the address bar or open the menu and select 'Install'";
+      } else if (isSafari) {
+        message = "Use Safari's File menu and select 'Add to Dock'";
+      } else {
+        message = "Use your browser's menu options to install this application";
+      }
+    }
+    
+    toast({
+      title: "Install App",
+      description: message,
+    });
+  };
 
   if (!user) {
     return (
@@ -25,6 +71,18 @@ const Index = () => {
               Sign Up
             </Link>
           </div>
+          
+          {/* Add install button for non-logged in users */}
+          <div className="mt-6">
+            <Button 
+              variant="outline" 
+              onClick={handleInstallClick}
+              className="w-full flex items-center justify-center"
+            >
+              <Download className="h-5 w-5 mr-2" />
+              Install App
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -40,6 +98,14 @@ const Index = () => {
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Streamline your invoicing process with our powerful, yet simple to use platform.
           </p>
+          
+          {/* Add a prominent install button here */}
+          <div className="mt-6">
+            <Button onClick={handleInstallClick} size="lg" className="bg-primary text-white">
+              <Download className="h-6 w-6 mr-2" />
+              Install App
+            </Button>
+          </div>
         </div>
         
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
