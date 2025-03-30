@@ -1,28 +1,143 @@
-
-import React, { useState, useEffect } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { InvoiceDetails, Product, Invoice } from "../types/invoice";
-import InvoiceHeader from "../components/InvoiceHeader";
-import ProductList from "../components/ProductList";
-import InvoiceSummary from "../components/InvoiceSummary";
-import ActionButtons from "../components/ActionButtons";
-import { 
-  File, 
-  ReceiptText,
-  LogOut,
-  User,
-  Settings
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
-import { Link, Navigate } from "react-router-dom";
-import CompanySelector from "@/components/CompanySelector";
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { ReceiptText, FileBarChart, Download } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import AppHeader from '@/components/AppHeader';
 
 const Index = () => {
-  // Redirect to the new InvoicesList page
-  return <Navigate to="/" replace />;
+  const { user } = useAuth();
+  const [showInstallButton, setShowInstallButton] = useState<boolean>(true); // Always show in dev
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    // Check if the app is already installed
+    const isAppInstalled = window.matchMedia('(display-mode: standalone)').matches;
+    
+    if (isAppInstalled) {
+      setShowInstallButton(false);
+      return;
+    }
+
+    const handleBeforeInstallPrompt = (e: any) => {
+      // Prevent Chrome 76+ from automatically showing the prompt
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      setDeferredPrompt(e);
+      // Update UI to show install button
+      setShowInstallButton(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      // Fallback for browsers that don't support the beforeinstallprompt event
+      toast({
+        title: "Installation",
+        description: "To install, use your browser's 'Add to Home Screen' or 'Install' option in the menu.",
+      });
+      return;
+    }
+
+    // Show the install prompt
+    deferredPrompt.prompt();
+    
+    // Wait for the user to respond to the prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    // We no longer need the prompt regardless of outcome
+    setDeferredPrompt(null);
+    setShowInstallButton(false);
+    
+    if (outcome === 'accepted') {
+      toast({
+        title: "Installation Successful",
+        description: "The app was successfully installed on your device.",
+      });
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white p-8 rounded shadow-md max-w-md w-full">
+          <h2 className="text-2xl font-bold mb-4 text-gray-800">Welcome to Invoicing Genius</h2>
+          <p className="text-gray-700 mb-6">
+            Please sign in to access your invoices and estimates.
+          </p>
+          <div className="flex justify-between">
+            <Link to="/sign-in" className="bg-primary text-white py-2 px-4 rounded hover:bg-primary/80 transition-colors">
+              Sign In
+            </Link>
+            <Link to="/sign-up" className="bg-secondary text-white py-2 px-4 rounded hover:bg-secondary/80 transition-colors">
+              Sign Up
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <AppHeader />
+      
+      <div className="container mx-auto px-4 py-12">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to Invoicing Genius</h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Streamline your invoicing process with our powerful, yet simple to use platform.
+          </p>
+          
+          {showInstallButton && (
+            <Button
+              onClick={handleInstallClick}
+              className="mt-6 bg-primary text-white hover:bg-primary/90"
+              size="lg"
+            >
+              <Download className="h-5 w-5 mr-2" />
+              Install App
+            </Button>
+          )}
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="bg-white rounded-lg shadow-md p-8 border border-gray-100 hover:shadow-lg transition-shadow">
+            <div className="text-primary mb-4">
+              <ReceiptText className="h-12 w-12" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Invoices</h2>
+            <p className="text-gray-600 mb-6">
+              Create, manage, and track all your invoices in one place. Send professional invoices to your clients easily.
+            </p>
+            <Button asChild>
+              <Link to="/invoices">Manage Invoices</Link>
+            </Button>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-md p-8 border border-gray-100 hover:shadow-lg transition-shadow">
+            <div className="text-primary mb-4">
+              <FileBarChart className="h-12 w-12" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Estimates</h2>
+            <p className="text-gray-600 mb-6">
+              Create detailed estimates for your clients. Convert approved estimates to invoices with one click.
+            </p>
+            <Button asChild>
+              <Link to="/estimates">Manage Estimates</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Index;

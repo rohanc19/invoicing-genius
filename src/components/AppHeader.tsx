@@ -14,7 +14,7 @@ interface AppHeaderProps {
 
 const AppHeader: React.FC<AppHeaderProps> = ({ userProfile }) => {
   const { user, signOut } = useAuth();
-  const [showInstallButton, setShowInstallButton] = useState<boolean>(false);
+  const [showInstallButton, setShowInstallButton] = useState<boolean>(true); // Always show in dev
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
