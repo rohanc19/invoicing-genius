@@ -7,6 +7,9 @@
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4f46e5",
+  "categories": ["productivity", "finance", "business"],
+  "orientation": "any",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
@@ -55,6 +58,38 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/invoice-list.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Invoicing Genius dashboard"
+    },
+    {
+      "src": "/screenshots/invoice-mobile.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile view of invoices"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Create Invoice",
+      "short_name": "New Invoice",
+      "description": "Create a new invoice",
+      "url": "/create-invoice",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Create Estimate",
+      "short_name": "New Estimate",
+      "description": "Create a new estimate",
+      "url": "/create-estimate",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
     }
   ]
 }

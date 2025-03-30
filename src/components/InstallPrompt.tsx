@@ -1,20 +1,28 @@
 
 import React, { useEffect, useState } from 'react';
-import { Download } from 'lucide-react';
+import { Download, MonitorSmartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const InstallPrompt: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [isWindows, setIsWindows] = useState(false);
+  const [isAppInstalled, setIsAppInstalled] = useState(false);
 
   useEffect(() => {
     // Check if the app is already installed
-    const isAppInstalled = window.matchMedia('(display-mode: standalone)').matches;
+    const checkIfInstalled = window.matchMedia('(display-mode: standalone)').matches;
+    setIsAppInstalled(checkIfInstalled);
     
-    if (isAppInstalled) {
+    if (checkIfInstalled) {
       return; // Don't show install prompt if already installed
     }
+
+    // Check if running on Windows
+    const userAgent = navigator.userAgent.toLowerCase();
+    setIsWindows(userAgent.includes('windows'));
 
     const handleBeforeInstallPrompt = (e: any) => {
       // Prevent Chrome 76+ from automatically showing the prompt
@@ -51,7 +59,19 @@ const InstallPrompt: React.FC = () => {
     console.log(`User ${outcome === 'accepted' ? 'accepted' : 'dismissed'} the install prompt`);
   };
 
-  if (!showPrompt) {
+  const handleWindowsInstall = () => {
+    // Guide users through PWA installation on Windows
+    const domain = window.location.hostname;
+    const installSteps = [
+      `1. Click the "..." or Settings menu in your browser`,
+      `2. Select "Apps" or "Install this site as an app"`,
+      `3. Follow the browser prompts to complete installation`
+    ];
+    
+    alert(`To install on Windows:\n${installSteps.join('\n')}`);
+  };
+
+  if (isAppInstalled || !showPrompt) {
     return null;
   }
 
@@ -64,14 +84,51 @@ const InstallPrompt: React.FC = () => {
             <p className="text-sm text-gray-600 mb-3">
               Install this app on your device for offline access and a better experience.
             </p>
-            <Button 
-              size="sm" 
-              onClick={handleInstallClick}
-              className="w-full"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Install App
-            </Button>
+            
+            <Tabs defaultValue={isWindows ? "windows" : "mobile"} className="w-full">
+              <TabsList className="w-full mb-2">
+                <TabsTrigger value="mobile" className="flex-1">
+                  <MonitorSmartphone className="w-4 h-4 mr-1" />
+                  Mobile
+                </TabsTrigger>
+                <TabsTrigger value="windows" className="flex-1">
+                  <Download className="w-4 h-4 mr-1" />
+                  Windows
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="mobile">
+                <Button 
+                  size="sm" 
+                  onClick={handleInstallClick}
+                  className="w-full"
+                  disabled={!deferredPrompt}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Install on Device
+                </Button>
+                {!deferredPrompt && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    For Android: Please use Chrome browser to install.
+                  </p>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="windows">
+                <Button 
+                  size="sm" 
+                  onClick={handleWindowsInstall}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Install on Windows
+                </Button>
+                <p className="text-xs text-gray-500 mt-1">
+                  Works best with Chrome or Edge browsers.
+                </p>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </CardContent>
