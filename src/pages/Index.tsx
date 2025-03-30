@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,7 +9,8 @@ import AppHeader from '@/components/AppHeader';
 
 const Index = () => {
   const { user } = useAuth();
-  const [showInstallButton, setShowInstallButton] = useState<boolean>(true); // Always show in dev
+  // Force showing the install button in development for testing
+  const [showInstallButton, setShowInstallButton] = useState<boolean>(true);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
@@ -72,13 +74,23 @@ const Index = () => {
           <p className="text-gray-700 mb-6">
             Please sign in to access your invoices and estimates.
           </p>
-          <div className="flex justify-between">
-            <Link to="/sign-in" className="bg-primary text-white py-2 px-4 rounded hover:bg-primary/80 transition-colors">
+          <div className="flex gap-4 flex-col sm:flex-row">
+            <Link to="/sign-in" className="bg-primary text-white py-2 px-4 rounded hover:bg-primary/80 transition-colors text-center">
               Sign In
             </Link>
-            <Link to="/sign-up" className="bg-secondary text-white py-2 px-4 rounded hover:bg-secondary/80 transition-colors">
+            <Link to="/sign-up" className="bg-secondary text-white py-2 px-4 rounded hover:bg-secondary/80 transition-colors text-center">
               Sign Up
             </Link>
+            {showInstallButton && (
+              <Button
+                onClick={handleInstallClick}
+                className="bg-green-600 hover:bg-green-700 text-white"
+                size="default"
+              >
+                <Download className="h-5 w-5 mr-2" />
+                Install App
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -99,7 +111,7 @@ const Index = () => {
           {showInstallButton && (
             <Button
               onClick={handleInstallClick}
-              className="mt-6 bg-primary text-white hover:bg-primary/90"
+              className="mt-6 bg-green-600 text-white hover:bg-green-700"
               size="lg"
             >
               <Download className="h-5 w-5 mr-2" />
