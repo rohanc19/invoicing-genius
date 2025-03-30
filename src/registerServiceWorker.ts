@@ -30,14 +30,10 @@ export function register() {
                   toast({
                     title: 'Update Available',
                     description: 'A new version of the app is available. Please refresh to update.',
-                    action: (
-                      <button 
-                        onClick={() => window.location.reload()}
-                        className="bg-primary text-white px-3 py-1 rounded text-xs"
-                      >
-                        Refresh Now
-                      </button>
-                    ),
+                    action: {
+                      label: 'Refresh Now',
+                      onClick: () => window.location.reload()
+                    },
                     duration: 10000, // Show for 10 seconds
                   });
                 } else {
