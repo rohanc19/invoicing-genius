@@ -1,70 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { ReceiptText, FileBarChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ReceiptText, FileBarChart, Download } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
 import AppHeader from '@/components/AppHeader';
+import InstallButton from '@/components/InstallButton';
 
 const Index = () => {
   const { user } = useAuth();
-  // Force showing the install button in development for testing
-  const [showInstallButton, setShowInstallButton] = useState<boolean>(true);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-
-  useEffect(() => {
-    // Check if the app is already installed
-    const isAppInstalled = window.matchMedia('(display-mode: standalone)').matches;
-    
-    if (isAppInstalled) {
-      setShowInstallButton(false);
-      return;
-    }
-
-    const handleBeforeInstallPrompt = (e: any) => {
-      // Prevent Chrome 76+ from automatically showing the prompt
-      e.preventDefault();
-      // Stash the event so it can be triggered later
-      setDeferredPrompt(e);
-      // Update UI to show install button
-      setShowInstallButton(true);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) {
-      // Fallback for browsers that don't support the beforeinstallprompt event
-      toast({
-        title: "Installation",
-        description: "To install, use your browser's 'Add to Home Screen' or 'Install' option in the menu.",
-      });
-      return;
-    }
-
-    // Show the install prompt
-    deferredPrompt.prompt();
-    
-    // Wait for the user to respond to the prompt
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    // We no longer need the prompt regardless of outcome
-    setDeferredPrompt(null);
-    setShowInstallButton(false);
-    
-    if (outcome === 'accepted') {
-      toast({
-        title: "Installation Successful",
-        description: "The app was successfully installed on your device.",
-      });
-    }
-  };
 
   if (!user) {
     return (
@@ -81,16 +25,8 @@ const Index = () => {
             <Link to="/sign-up" className="bg-secondary text-white py-2 px-4 rounded hover:bg-secondary/80 transition-colors text-center">
               Sign Up
             </Link>
-            {showInstallButton && (
-              <Button
-                onClick={handleInstallClick}
-                className="bg-green-600 hover:bg-green-700 text-white"
-                size="default"
-              >
-                <Download className="h-5 w-5 mr-2" />
-                Install App
-              </Button>
-            )}
+            {/* Always show install button for easy discovery */}
+            <InstallButton />
           </div>
         </div>
       </div>
@@ -108,16 +44,10 @@ const Index = () => {
             Streamline your invoicing process with our powerful, yet simple to use platform.
           </p>
           
-          {showInstallButton && (
-            <Button
-              onClick={handleInstallClick}
-              className="mt-6 bg-green-600 text-white hover:bg-green-700"
-              size="lg"
-            >
-              <Download className="h-5 w-5 mr-2" />
-              Install App
-            </Button>
-          )}
+          {/* Prominently display the install button */}
+          <div className="mt-6">
+            <InstallButton size="lg" />
+          </div>
         </div>
         
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
