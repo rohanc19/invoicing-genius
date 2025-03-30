@@ -5,7 +5,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ReceiptText, FileBarChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AppHeader from '@/components/AppHeader';
-import InstallButton from '@/components/InstallButton';
 
 const Index = () => {
   const { user } = useAuth();
@@ -25,8 +24,6 @@ const Index = () => {
             <Link to="/sign-up" className="bg-secondary text-white py-2 px-4 rounded hover:bg-secondary/80 transition-colors text-center">
               Sign Up
             </Link>
-            {/* Always show install button for easy discovery */}
-            <InstallButton />
           </div>
         </div>
       </div>
@@ -43,11 +40,6 @@ const Index = () => {
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Streamline your invoicing process with our powerful, yet simple to use platform.
           </p>
-          
-          {/* Prominently display the install button */}
-          <div className="mt-6">
-            <InstallButton size="lg" />
-          </div>
         </div>
         
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
