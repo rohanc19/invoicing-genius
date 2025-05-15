@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Electron Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            text-align: center;
+            padding: 50px;
+        }
+        h1 {
+            color: #4f46e5;
+        }
+        button {
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #3c35b5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .info {
+            text-align: left;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e6f7ff;
+            border-left: 4px solid #1890ff;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Invoicing Genius Test Page</h1>
+        <p>If you can see this page, Electron is working correctly!</p>
+
+        <div class="info">
+            <p><strong>Troubleshooting:</strong> We're currently testing if Electron can properly display content. This test page is displaying correctly, which means Electron itself is working.</p>
+            <p>Click the "Load Invoicing Genius App" button below to attempt to load the actual application.</p>
+        </div>
+
+        <button id="testButton">Load Invoicing Genius App</button>
+        <button id="directLoadButton">Direct Load (Alternative)</button>
+    </div>
+
+    <script>
+        // Main button to load the app
+        document.getElementById('testButton').addEventListener('click', function() {
+            console.log('Test button clicked, dispatching load-app event');
+            const event = new CustomEvent('load-app');
+            document.dispatchEvent(event);
+        });
+
+        // Alternative direct method
+        document.getElementById('directLoadButton').addEventListener('click', function() {
+            console.log('Direct load button clicked');
+            if (window.electron && window.electron.loadApp) {
+                window.electron.loadApp();
+            } else {
+                alert('Electron API not available. This might indicate an issue with the preload script.');
+            }
+        });
+    </script>
+</body>
+</html>

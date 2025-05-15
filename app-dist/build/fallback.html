@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoicing Genius - Fallback Mode</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background-color: #f0f4f8;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #4f46e5;
+            margin-top: 0;
+        }
+        .card {
+            background-color: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4f46e5;
+        }
+        .button {
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .button:hover {
+            background-color: #4338ca;
+        }
+        .button.secondary {
+            background-color: #64748b;
+        }
+        .button.secondary:hover {
+            background-color: #475569;
+        }
+        .error-details {
+            background-color: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            display: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table th, table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        table th {
+            background-color: #f1f5f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Invoicing Genius</h1>
+        <p>The main application encountered an issue while loading. You can use this simplified version instead.</p>
+
+        <div class="card">
+            <h2>Quick Actions</h2>
+            <button class="button" id="new-invoice-btn">New Invoice</button>
+            <button class="button" id="view-invoices-btn">View Invoices</button>
+            <button class="button" id="view-clients-btn">View Clients</button>
+            <button class="button secondary" id="retry-btn">Retry Main App</button>
+        </div>
+
+        <div id="content-area">
+            <div id="dashboard-view">
+                <h2>Dashboard</h2>
+                <p>Welcome to Invoicing Genius. Use the buttons above to navigate.</p>
+
+                <div class="card">
+                    <h3>Recent Activity</h3>
+                    <p>No recent activity to display.</p>
+                </div>
+            </div>
+
+            <div id="invoices-view" style="display: none;">
+                <h2>Invoices</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Client</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1001</td>
+                            <td>ABC Corp</td>
+                            <td>$1,200.00</td>
+                            <td>2023-05-01</td>
+                            <td>Paid</td>
+                        </tr>
+                        <tr>
+                            <td>1002</td>
+                            <td>XYZ Ltd</td>
+                            <td>$3,450.00</td>
+                            <td>2023-05-10</td>
+                            <td>Sent</td>
+                        </tr>
+                        <tr>
+                            <td>1003</td>
+                            <td>Acme Inc</td>
+                            <td>$890.00</td>
+                            <td>2023-05-15</td>
+                            <td>Draft</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="clients-view" style="display: none;">
+                <h2>Clients</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>ABC Corp</td>
+                            <td>contact@abccorp.com</td>
+                            <td>123-456-7890</td>
+                        </tr>
+                        <tr>
+                            <td>XYZ Ltd</td>
+                            <td>info@xyzltd.com</td>
+                            <td>234-567-8901</td>
+                        </tr>
+                        <tr>
+                            <td>Acme Inc</td>
+                            <td>hello@acmeinc.com</td>
+                            <td>345-678-9012</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="new-invoice-view" style="display: none;">
+                <h2>New Invoice</h2>
+                <form id="invoice-form">
+                    <div style="margin-bottom: 15px;">
+                        <label for="client" style="display: block; margin-bottom: 5px;">Client:</label>
+                        <select id="client" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                            <option value="1">ABC Corp</option>
+                            <option value="2">XYZ Ltd</option>
+                            <option value="3">Acme Inc</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label for="amount" style="display: block; margin-bottom: 5px;">Amount:</label>
+                        <input type="number" id="amount" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label for="date" style="display: block; margin-bottom: 5px;">Date:</label>
+                        <input type="date" id="date" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label for="description" style="display: block; margin-bottom: 5px;">Description:</label>
+                        <textarea id="description" rows="4" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px;"></textarea>
+                    </div>
+
+                    <button type="submit" class="button">Save Invoice</button>
+                    <button type="button" class="button secondary" id="cancel-invoice-btn">Cancel</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="error-details" id="error-details"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Navigation buttons
+            const newInvoiceBtn = document.getElementById('new-invoice-btn');
+            const viewInvoicesBtn = document.getElementById('view-invoices-btn');
+            const viewClientsBtn = document.getElementById('view-clients-btn');
+            const retryBtn = document.getElementById('retry-btn');
+            const cancelInvoiceBtn = document.getElementById('cancel-invoice-btn');
+            const errorDetails = document.getElementById('error-details');
+
+            // Views
+            const dashboardView = document.getElementById('dashboard-view');
+            const invoicesView = document.getElementById('invoices-view');
+            const clientsView = document.getElementById('clients-view');
+            const newInvoiceView = document.getElementById('new-invoice-view');
+
+            // Check for error parameter in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const errorParam = urlParams.get('error');
+
+            if (errorParam) {
+                errorDetails.textContent = 'Error: ' + decodeURIComponent(errorParam);
+                errorDetails.style.display = 'block';
+            }
+
+            // Hide all views
+            function hideAllViews() {
+                dashboardView.style.display = 'none';
+                invoicesView.style.display = 'none';
+                clientsView.style.display = 'none';
+                newInvoiceView.style.display = 'none';
+            }
+
+            // Show dashboard
+            function showDashboard() {
+                hideAllViews();
+                dashboardView.style.display = 'block';
+            }
+
+            // Navigation event listeners
+            newInvoiceBtn.addEventListener('click', function() {
+                hideAllViews();
+                newInvoiceView.style.display = 'block';
+            });
+
+            viewInvoicesBtn.addEventListener('click', function() {
+                hideAllViews();
+                invoicesView.style.display = 'block';
+            });
+
+            viewClientsBtn.addEventListener('click', function() {
+                hideAllViews();
+                clientsView.style.display = 'block';
+            });
+
+            retryBtn.addEventListener('click', function() {
+                window.location.href = 'index.html';
+            });
+
+            cancelInvoiceBtn.addEventListener('click', function() {
+                showDashboard();
+            });
+
+            // Form submission
+            const invoiceForm = document.getElementById('invoice-form');
+            invoiceForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                // Get form values
+                const client = document.getElementById('client').value;
+                const amount = document.getElementById('amount').value;
+                const date = document.getElementById('date').value;
+                const description = document.getElementById('description').value;
+
+                // Simple validation
+                if (!client || !amount || !date) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+
+                // In a real app, we would save this data
+                console.log('Invoice data:', { client, amount, date, description });
+
+                // Show success message
+                alert('Invoice saved successfully!');
+                showDashboard();
+            });
+
+            // Set today's date as default for the date input
+            const dateInput = document.getElementById('date');
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            dateInput.value = formattedDate;
+
+            // Initialize
+            showDashboard();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#4f46e5" rx="100" ry="100"/>
+  <text x="256" y="300" font-size="220" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-weight="bold">IG</text>
+  <path d="M140,180 L372,180" stroke="white" stroke-width="12" stroke-linecap="round"/>
+  <path d="M140,220 L372,220" stroke="white" stroke-width="12" stroke-linecap="round"/>
+  <path d="M140,350 L372,350" stroke="white" stroke-width="12" stroke-linecap="round"/>
+</svg>

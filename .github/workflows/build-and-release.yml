@@ -1,0 +1,228 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        default: ''
+
+jobs:
+  build-web:
+    name: Build Web App
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Upload web build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: web-build
+          path: dist/
+          retention-days: 1
+
+  build-desktop:
+    name: Build Desktop App
+    needs: build-web
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: windows-latest
+            platform: win
+          - os: macos-latest
+            platform: mac
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd electron && npm ci
+
+      - name: Download web build
+        uses: actions/download-artifact@v3
+        with:
+          name: web-build
+          path: dist/
+
+      - name: Build Electron app
+        run: |
+          cd electron
+          npm run build:${{ matrix.platform }}
+
+      - name: Upload desktop build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: desktop-${{ matrix.platform }}
+          path: electron/dist/
+          retention-days: 7
+
+  build-android:
+    name: Build Android App
+    needs: build-web
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download web build
+        uses: actions/download-artifact@v3
+        with:
+          name: web-build
+          path: dist/
+
+      - name: Install Capacitor CLI
+        run: npm install -g @capacitor/cli
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Build Android app
+        run: |
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Upload Android build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-app
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 7
+
+  build-ios:
+    name: Build iOS App
+    needs: build-web
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download web build
+        uses: actions/download-artifact@v3
+        with:
+          name: web-build
+          path: dist/
+
+      - name: Install Capacitor CLI
+        run: npm install -g @capacitor/cli
+
+      - name: Sync Capacitor
+        run: npx cap sync ios
+
+      - name: Install CocoaPods
+        run: |
+          cd ios/App
+          pod install
+
+      - name: Build iOS app
+        run: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator -derivedDataPath build
+
+      - name: Upload iOS build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-app
+          path: ios/App/build/Build/Products/Debug-iphonesimulator/App.app
+          retention-days: 7
+
+  create-release:
+    name: Create Release
+    needs: [build-desktop, build-android, build-ios]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Get version
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          else
+            echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+          fi
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts/
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: Invoicing Genius v${{ env.VERSION }}
+          draft: true
+          prerelease: false
+          files: |
+            artifacts/desktop-win/*.exe
+            artifacts/desktop-mac/*.dmg
+            artifacts/desktop-linux/*.AppImage
+            artifacts/android-app/*.apk
+          body: |
+            # Invoicing Genius v${{ env.VERSION }}
+            
+            ## Desktop Applications
+            - Windows: [InvoicingGenius-Setup-${{ env.VERSION }}.exe](https://github.com/${{ github.repository }}/releases/download/v${{ env.VERSION }}/InvoicingGenius-Setup-${{ env.VERSION }}.exe)
+            - macOS: [InvoicingGenius-${{ env.VERSION }}.dmg](https://github.com/${{ github.repository }}/releases/download/v${{ env.VERSION }}/InvoicingGenius-${{ env.VERSION }}.dmg)
+            - Linux: [InvoicingGenius-${{ env.VERSION }}.AppImage](https://github.com/${{ github.repository }}/releases/download/v${{ env.VERSION }}/InvoicingGenius-${{ env.VERSION }}.AppImage)
+            
+            ## Mobile Applications
+            - Android: [InvoicingGenius-${{ env.VERSION }}.apk](https://github.com/${{ github.repository }}/releases/download/v${{ env.VERSION }}/app-debug.apk)
+            - iOS: Available on TestFlight (contact for access)
+            
+            ## Changes in this version
+            - [Add changes here]

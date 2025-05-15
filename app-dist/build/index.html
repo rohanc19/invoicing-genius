@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invoicing Genius</title>
+    <meta name="description" content="Manage your invoices and estimates on the go" />
+    <meta name="author" content="Lovable" />
+
+    <!-- PWA support -->
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#4f46e5" />
+    <link rel="apple-touch-icon" href="./icons/icon-192x192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./icons/icon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="./icons/icon-16x16.png" />
+
+    <!-- Social Media Meta Tags -->
+    <meta property="og:title" content="Invoicing Genius" />
+    <meta property="og:description" content="Manage your invoices and estimates on the go" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@lovable_dev" />
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <!-- Global error handler -->
+    <script>
+      // Set a timeout to redirect to fallback page if the app doesn't load
+      const appLoadTimeout = setTimeout(function() {
+        console.warn('App failed to load within timeout period, redirecting to fallback page');
+        window.location.href = 'fallback.html';
+      }, 10000); // 10 seconds timeout
+
+      // Function to cancel the timeout if the app loads successfully
+      window.appLoaded = function() {
+        clearTimeout(appLoadTimeout);
+        console.log('App loaded successfully');
+      };
+
+      // Global error handler
+      window.addEventListener('error', function(event) {
+        console.warn('Global error caught:', event.error);
+        // Prevent the default handling (which would log to console)
+        event.preventDefault();
+
+        // If we get a critical error, redirect to fallback page
+        if (event.error && (
+            event.error.message.includes('Failed to fetch') ||
+            event.error.message.includes('is not defined') ||
+            event.error.message.includes('Cannot read properties')
+        )) {
+          console.error('Critical error detected, redirecting to fallback page');
+          window.location.href = 'fallback.html?error=' + encodeURIComponent(event.error.message);
+        }
+
+        return true;
+      });
+
+      // Initialize app state in case it's missing
+      window.appState = window.appState || {
+        user: { name: 'User', settings: { theme: 'light', language: 'en', currency: 'USD' } },
+        invoices: [],
+        clients: [],
+        initialized: false
+      };
+
+      // Call appLoaded after a short delay to indicate the initial scripts loaded
+      setTimeout(function() {
+        if (window.appLoaded) window.appLoaded();
+      }, 2000);
+    </script>
+
+    <script src="./fetch-handler.js"></script>
+    <!-- Load our mock Stripe.js before the main app -->
+    <script src="./stripe.js"></script>
+    <!-- Register our Electron-specific service worker -->
+    <script src="./register-sw.js"></script>
+    <script type="module" crossorigin src="./assets/index-p2zkkn6o.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Du0TqkG7.css">
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+
+    <!-- Script to help with Electron integration -->
+    <script>
+      // This script helps with Electron integration
+      window.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM fully loaded and parsed');
+
+        // Check if we're running in Electron
+        if (window.electron) {
+          console.log('Running in Electron environment');
+        } else {
+          console.log('Not running in Electron environment');
+        }
+      });
+    </script>
+  </body>
+</html>

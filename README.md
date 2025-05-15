@@ -1,69 +1,131 @@
-# Welcome to your Lovable project
+# Invoicing Genius
 
-## Project info
+A comprehensive invoicing application designed for small businesses. Create, manage, and track invoices and estimates with ease.
 
-**URL**: https://lovable.dev/projects/5cbd3c91-5799-4f9c-81dc-dac9be9cf927
+## Features
 
-## How can I edit this code?
+- **Invoice Management**: Create, edit, and manage professional invoices
+- **Estimate Creation**: Generate estimates for clients
+- **Client Management**: Maintain a database of clients
+- **Payment Tracking**: Track payments and outstanding balances
+- **Reports and Analytics**: Generate financial reports and insights
+- **Multi-Currency Support**: Work with different currencies
+- **Multi-Language Support**: Available in English, Spanish, and French
+- **Offline Support**: Work without an internet connection
+- **Cross-Device Sync**: Use on desktop and mobile devices
 
-There are several ways of editing your application.
+## Desktop Application
 
-**Use Lovable**
+Invoicing Genius is available as a desktop application for Windows, macOS, and Linux.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5cbd3c91-5799-4f9c-81dc-dac9be9cf927) and start prompting.
+### Installation
 
-Changes made via Lovable will be committed automatically to this repo.
+1. Download the latest release from the [releases page](https://github.com/yourusername/invoicing-genius/releases)
+2. Run the installer for your platform:
+   - Windows: `InvoicingGenius-Setup-x.x.x.exe`
+   - macOS: `InvoicingGenius-x.x.x.dmg`
+   - Linux: `InvoicingGenius-x.x.x.AppImage`
 
-**Use your preferred IDE**
+### Building from Source
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+To build the desktop application from source:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Install dependencies
+npm install
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Build the React application
+npm run build
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Build the Electron application
+npm run electron:build
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+The built application will be available in the `dist` directory.
+
+## Mobile Application
+
+Invoicing Genius is also available as a mobile application for Android and iOS.
+
+### Installation
+
+- Android: Download from [Google Play Store](https://play.google.com/store)
+- iOS: Download from [Apple App Store](https://apps.apple.com)
+
+### Building from Source
+
+To build the mobile application from source:
+
+```sh
+# Install dependencies
+npm install
+
+# Build the React application
+npm run build
+
+# Sync with Capacitor
+npm run capacitor:sync
+
+# Build for Android
+npm run capacitor:build:android
+
+# Build for iOS
+npm run capacitor:build:ios
+```
+
+## Development
+
+### Prerequisites
+
+- Node.js (v16 or later)
+- npm (v7 or later)
+
+### Setup
+
+```sh
+# Clone the repository
+git clone https://github.com/yourusername/invoicing-genius.git
+
+# Navigate to the project directory
+cd invoicing-genius
+
+# Install dependencies
+npm install
+
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Desktop Development
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```sh
+# Start the development server with Electron
+npm run electron:dev
+```
 
-**Use GitHub Codespaces**
+### Mobile Development
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```sh
+# Start the development server
+npm run dev
 
-## What technologies are used for this project?
+# Run on Android
+npm run capacitor:run:android
 
-This project is built with .
+# Run on iOS
+npm run capacitor:run:ios
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Technologies Used
 
-## How can I deploy this project?
+- **Frontend**: React, TypeScript, Tailwind CSS, shadcn/ui
+- **Backend**: Supabase (Authentication, Database, Storage)
+- **Desktop**: Electron
+- **Mobile**: Capacitor
+- **Payment Processing**: Stripe
+- **Offline Support**: IndexedDB, Service Workers
+- **Internationalization**: i18next
 
-Simply open [Lovable](https://lovable.dev/projects/5cbd3c91-5799-4f9c-81dc-dac9be9cf927) and click on Share -> Publish.
+## License
 
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+This project is licensed under the MIT License - see the LICENSE file for details.

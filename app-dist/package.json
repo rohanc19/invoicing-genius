@@ -1,0 +1,62 @@
+{
+  "name": "invoicing-genius-desktop",
+  "version": "1.0.0",
+  "description": "Desktop application for Invoicing Genius",
+  "main": "main.js",
+  "author": "Invoicing Genius",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "electron-updater": "^5.3.0"
+  },
+  "devDependencies": {
+    "electron": "^25.3.1",
+    "electron-builder": "^24.4.0"
+  },
+  "scripts": {
+    "check-env": "node check-env.js",
+    "create-icons": "node create-icons.js",
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.example.invoicing-genius",
+    "productName": "Invoicing Genius",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "icons/**/*",
+      "../build/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "icons/icon.png"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "icons/icon.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "icon": "icons/icon.png"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "invoicing-genius",
+      "repo": "invoicing-genius-desktop"
+    }
+  },
+  "keywords": []
+}

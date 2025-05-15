@@ -11,6 +11,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Building, User, Save } from "lucide-react";
 import { Link } from "react-router-dom";
+import DataExportImport from "@/components/DataExportImport";
+import AppHeader from "@/components/AppHeader";
+import CurrencySelector from "@/components/CurrencySelector";
+import LanguageSelector from "@/components/LanguageSelector";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "react-i18next";
 
 interface ProfileData {
   full_name: string;
@@ -18,6 +25,8 @@ interface ProfileData {
   company_address: string;
   company_email: string;
   company_phone: string;
+  default_currency?: string;
+  default_language?: string;
 }
 
 const Profile = () => {
@@ -30,7 +39,10 @@ const Profile = () => {
     company_address: "",
     company_email: "",
     company_phone: "",
+    default_currency: "",
   });
+
+  const { currency, setCurrency } = useCurrency();
 
   // Fetch user profile data
   useEffect(() => {
@@ -56,7 +68,13 @@ const Profile = () => {
             company_address: data.company_address || "",
             company_email: data.company_email || "",
             company_phone: data.company_phone || "",
+            default_currency: data.default_currency || "",
           });
+
+          // Update currency context if default currency is set
+          if (data.default_currency) {
+            setCurrency(data.default_currency);
+          }
         }
       } catch (error) {
         console.error("Error in profile fetch:", error);
@@ -89,6 +107,7 @@ const Profile = () => {
           company_address: profileData.company_address,
           company_email: profileData.company_email,
           company_phone: profileData.company_phone,
+          default_currency: profileData.default_currency || currency,
           updated_at: new Date().toISOString(),
         })
         .eq("id", user.id);
@@ -112,14 +131,43 @@ const Profile = () => {
     }
   };
 
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  // Fetch user profile for AppHeader
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          setUserProfile(data);
+        }
+      } catch (error: any) {
+        console.error("Error fetching profile for header:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-12">
+      <AppHeader userProfile={userProfile} />
+
+      <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Company Profile</h1>
           <div className="flex gap-2">
             <Button asChild variant="outline">
-              <Link to="/">Back to Invoices</Link>
+              <Link to="/">Back to Dashboard</Link>
             </Button>
           </div>
         </div>
@@ -195,11 +243,25 @@ const Profile = () => {
                   placeholder="+1 (555) 123-4567"
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="default_currency">Default Currency</Label>
+                <CurrencySelector
+                  value={profileData.default_currency || currency}
+                  onValueChange={(value) => {
+                    setProfileData(prev => ({ ...prev, default_currency: value }));
+                  }}
+                  className="w-full"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  This currency will be used for all new invoices and estimates.
+                </p>
+              </div>
             </div>
           </CardContent>
           <CardFooter>
-            <Button 
-              onClick={saveProfile} 
+            <Button
+              onClick={saveProfile}
               disabled={isSaving}
               className="ml-auto"
             >
@@ -208,6 +270,10 @@ const Profile = () => {
             </Button>
           </CardFooter>
         </Card>
+
+        <div className="mt-8">
+          <DataExportImport />
+        </div>
       </div>
     </div>
   );

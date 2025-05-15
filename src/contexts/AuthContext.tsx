@@ -1,12 +1,11 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { User } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
+import { firebaseAuthService } from "@/integrations/supabase/real-client";
 
 interface AuthContextType {
-  session: Session | null;
   user: User | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
@@ -17,51 +16,41 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (event === 'SIGNED_IN') {
-          toast({
-            title: "Signed in successfully",
-            description: "Welcome to Invoicing Genius",
-          });
-        } else if (event === 'SIGNED_OUT') {
-          toast({
-            title: "Signed out successfully",
-            description: "You have been signed out",
-          });
-        }
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Set up auth state change listener
+    const unsubscribe = firebaseAuthService.onAuthStateChange((user) => {
+      setUser(user);
       setIsLoading(false);
+
+      if (user) {
+        toast({
+          title: "Signed in successfully",
+          description: "Welcome to Invoicing Genius",
+        });
+      }
     });
 
+    // Clean up subscription
     return () => {
-      subscription.unsubscribe();
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
     };
-  }, [navigate]);
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      
+      const { user, error } = await firebaseAuthService.signIn(email, password);
+
       if (error) {
-        throw error;
+        throw new Error(error);
       }
-      
+
       navigate('/');
     } catch (error: any) {
       toast({
@@ -77,23 +66,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signUp = async (email: string, password: string, metadata?: { full_name?: string, company_name?: string }) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          data: metadata
-        }
-      });
-      
+      const { user, error } = await firebaseAuthService.signUp(email, password);
+
       if (error) {
-        throw error;
+        throw new Error(error);
       }
-      
+
+      // Store user metadata in Firestore if needed
+      // This would be implemented in a separate function using firestoreService
+
       toast({
         title: "Account created",
         description: "Please check your email to confirm your account",
       });
-      
+
       navigate('/auth');
     } catch (error: any) {
       toast({
@@ -109,7 +95,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const signOut = async () => {
     try {
       setIsLoading(true);
-      await supabase.auth.signOut();
+      const { error } = await firebaseAuthService.signOut();
+
+      if (error) {
+        throw new Error(error);
+      }
+
       navigate('/auth');
     } catch (error: any) {
       toast({
@@ -125,7 +116,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   return (
     <AuthContext.Provider
       value={{
-        session,
         user,
         isLoading,
         signIn,

@@ -13,7 +13,7 @@
 
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
-    
+
     --primary: 0 0% 0%;
     --primary-foreground: 0 0% 98%;
 
@@ -28,7 +28,7 @@
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    
+
     --success: 142 76% 36%;
     --success-foreground: 0 0% 98%;
 
@@ -63,7 +63,7 @@
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    
+
     --success: 142 76% 36%;
     --success-foreground: 0 0% 98%;
 
@@ -81,13 +81,13 @@
   body {
     @apply bg-background text-foreground;
   }
-  
+
   .btn-hover-effect {
     @apply transition-all duration-200 hover:shadow-md;
   }
-  
+
   .card-effect {
-    @apply bg-white shadow-sm hover:shadow-md transition-shadow duration-200;
+    @apply bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-shadow duration-200;
   }
 }
 

@@ -2,10 +2,152 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://cheqvbtsgehxjpcfnwhr.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNoZXF2YnRzZ2VoeGpwY2Zud2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNTkwMTksImV4cCI6MjA1ODczNTAxOX0.SPpR3NIlTW9zDPAEBP_mBQ4oJiBVYoqLFo-mUZbb_aA";
+// For demo purposes, we're using a public demo project
+// In a real application, you would use your own Supabase project
+const SUPABASE_URL = "https://xyzcompany.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5emNvbXBhbnkiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTYwMDAwMDAwMCwiZXhwIjoyMDAwMDAwMDAwfQ.abc123";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+// For demo purposes, we'll create a mock Supabase client
+export const supabase = {
+  auth: {
+    signInWithPassword: async ({ email, password }: { email: string; password: string }) => {
+      // Simulate successful login for demo@example.com with password "password"
+      if (email === "demo@example.com" && password === "password") {
+        return {
+          data: {
+            user: {
+              id: "user-123",
+              email: email,
+              user_metadata: {
+                full_name: "Demo User",
+                company_name: "Demo Company"
+              }
+            },
+            session: {
+              access_token: "mock-token",
+              refresh_token: "mock-refresh-token",
+              expires_at: Date.now() + 3600000
+            }
+          },
+          error: null
+        };
+      }
+
+      // Simulate login error for other credentials
+      return {
+        data: { user: null, session: null },
+        error: { message: "Invalid login credentials" }
+      };
+    },
+
+    signUp: async ({ email, password, options }: { email: string; password: string; options?: any }) => {
+      // Simulate successful signup
+      return {
+        data: {
+          user: {
+            id: "new-user-" + Math.random().toString(36).substring(2, 9),
+            email: email,
+            user_metadata: options?.data || {}
+          },
+          session: null
+        },
+        error: null
+      };
+    },
+
+    signOut: async () => {
+      return { error: null };
+    },
+
+    getSession: async () => {
+      // Check if we have a session in localStorage
+      const storedSession = localStorage.getItem('mock_session');
+      if (storedSession) {
+        const session = JSON.parse(storedSession);
+        return { data: { session } };
+      }
+      return { data: { session: null } };
+    },
+
+    onAuthStateChange: (callback: any) => {
+      // Return a mock subscription
+      return {
+        data: {
+          subscription: {
+            unsubscribe: () => {}
+          }
+        }
+      };
+    }
+  },
+
+  from: (table: string) => {
+    return {
+      select: (columns: string = "*") => {
+        return {
+          eq: (column: string, value: any) => {
+            return {
+              single: async () => {
+                // Mock data for profiles
+                if (table === "profiles" && column === "id" && value === "user-123") {
+                  return {
+                    data: {
+                      id: "user-123",
+                      full_name: "Demo User",
+                      company_name: "Demo Company",
+                      address: "123 Main St, Anytown, USA",
+                      phone: "555-123-4567",
+                      website: "www.democompany.com",
+                      logo_url: ""
+                    },
+                    error: null
+                  };
+                }
+                return { data: null, error: null };
+              },
+              order: () => ({
+                limit: () => ({
+                  then: (callback: Function) => callback({ data: [], error: null })
+                })
+              })
+            };
+          },
+          order: () => ({
+            limit: () => ({
+              then: (callback: Function) => callback({ data: [], error: null })
+            })
+          })
+        };
+      },
+      insert: (data: any) => {
+        return {
+          select: () => ({
+            single: async () => {
+              return { data, error: null };
+            }
+          })
+        };
+      },
+      update: (data: any) => {
+        return {
+          eq: () => ({
+            then: (callback: Function) => callback({ data, error: null })
+          })
+        };
+      },
+      upsert: (data: any) => {
+        return { error: null };
+      },
+      delete: () => {
+        return {
+          eq: () => ({
+            then: (callback: Function) => callback({ error: null })
+          })
+        };
+      }
+    };
+  }
+} as any;

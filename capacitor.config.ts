@@ -2,11 +2,12 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.5cbd3c9157994f9c81dcdac9be9cf927',
+  appId: 'com.example.invoicinggenius',
   appName: 'Invoicing Genius',
   webDir: 'dist',
   server: {
-    url: 'https://5cbd3c91-5799-4f9c-81dc-dac9be9cf927.lovableproject.com?forceHideBadge=true',
+    androidScheme: 'https',
+    iosScheme: 'https',
     cleartext: true
   },
   android: {
@@ -17,9 +18,15 @@ const config: CapacitorConfig = {
       keystoreAliasPassword: null,
     }
   },
+  ios: {
+    contentInset: 'always',
+    allowsLinkPreview: true,
+    scrollEnabled: true,
+    limitsNavigationsToAppBoundDomains: true
+  },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 3000,
+      launchShowDuration: 2000,
       launchAutoHide: true,
       backgroundColor: "#4f46e5",
       androidSplashResourceName: "splash",
@@ -28,6 +35,13 @@ const config: CapacitorConfig = {
       spinnerColor: "#ffffff",
       splashFullScreen: true,
       splashImmersive: true
+    },
+    LocalNotifications: {
+      smallIcon: 'ic_stat_icon_config_sample',
+      iconColor: '#4f46e5'
+    },
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert']
     }
   }
 };

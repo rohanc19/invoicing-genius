@@ -1,26 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { 
-  Plus, 
-  FileText, 
-  ExternalLink, 
-  Edit, 
+import {
+  Plus,
+  FileText,
+  ExternalLink,
+  Edit,
   ReceiptText,
   User,
   LogOut,
   Settings,
   FileBarChart,
-  Download
+  Download,
+  Repeat
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Link, useNavigate } from "react-router-dom";
@@ -49,7 +50,7 @@ const InvoicesList = () => {
 
   useEffect(() => {
     const isAppInstalled = window.matchMedia('(display-mode: standalone)').matches;
-    
+
     if (isAppInstalled) {
       setShowInstallButton(false);
       return;
@@ -78,14 +79,14 @@ const InvoicesList = () => {
     }
 
     deferredPrompt.prompt();
-    
+
     const { outcome } = await deferredPrompt.userChoice;
-    
+
     setDeferredPrompt(null);
     setShowInstallButton(false);
-    
+
     console.log(`User ${outcome === 'accepted' ? 'accepted' : 'dismissed'} the install prompt`);
-    
+
     if (outcome === 'accepted') {
       toast({
         title: "Installation Successful",
@@ -98,17 +99,17 @@ const InvoicesList = () => {
     const fetchUserProfile = async () => {
       try {
         if (!user) return;
-        
+
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
           .single();
-          
+
         if (error) {
           throw error;
         }
-        
+
         if (data) {
           setUserProfile(data);
         }
@@ -120,7 +121,7 @@ const InvoicesList = () => {
         });
       }
     };
-    
+
     fetchUserProfile();
   }, [user]);
 
@@ -128,9 +129,9 @@ const InvoicesList = () => {
     const fetchInvoices = async () => {
       try {
         if (!user) return;
-        
+
         setIsLoading(true);
-        
+
         const { data: invoicesData, error: invoicesError } = await supabase
           .from('invoices')
           .select(`
@@ -143,25 +144,25 @@ const InvoicesList = () => {
           `)
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
-        
+
         if (invoicesError) throw invoicesError;
-        
+
         const invoicesWithTotals = await Promise.all(
           (invoicesData || []).map(async (invoice) => {
             const { data: products, error: productsError } = await supabase
               .from('invoice_products')
               .select('*')
               .eq('invoice_id', invoice.id);
-            
+
             if (productsError) throw productsError;
-            
+
             const total = (products || []).reduce((sum, product) => {
               const lineTotal = product.quantity * product.price;
               const lineTax = lineTotal * (product.tax / 100);
               const lineDiscount = lineTotal * (product.discount / 100);
               return sum + lineTotal + lineTax - lineDiscount;
             }, 0);
-            
+
             return {
               ...invoice,
               total_amount: total,
@@ -169,9 +170,9 @@ const InvoicesList = () => {
             };
           })
         );
-        
+
         setInvoices(invoicesWithTotals);
-        
+
       } catch (error: any) {
         toast({
           title: "Error fetching invoices",
@@ -182,7 +183,7 @@ const InvoicesList = () => {
         setIsLoading(false);
       }
     };
-    
+
     fetchInvoices();
   }, [user]);
 
@@ -202,7 +203,7 @@ const InvoicesList = () => {
             <ReceiptText className="h-6 w-6" />
             <h1 className="text-xl font-bold">Invoicing Genius</h1>
           </Link>
-          
+
           <div className="flex items-center gap-4">
             {showInstallButton && (
               <Button
@@ -215,7 +216,7 @@ const InvoicesList = () => {
                 Install App
               </Button>
             )}
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -227,15 +228,15 @@ const InvoicesList = () => {
                 <span className="hidden md:inline">Profile Settings</span>
               </Link>
             </Button>
-            
+
             <div className="flex items-center gap-2">
               <User className="h-5 w-5" />
               <span className="text-sm hidden md:inline">{userProfile?.full_name || user?.email}</span>
             </div>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
+
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={signOut}
               className="text-white hover:text-white hover:bg-primary/80"
             >
@@ -252,9 +253,9 @@ const InvoicesList = () => {
             <FileText className="h-5 w-5 text-primary" />
             <h2 className="text-2xl font-bold">My Invoices</h2>
           </div>
-          
+
           <div className="flex items-center gap-3">
-            <Button 
+            <Button
               variant="outline"
               asChild
             >
@@ -263,14 +264,24 @@ const InvoicesList = () => {
                 View Estimates
               </Link>
             </Button>
-            
+
+            <Button
+              variant="outline"
+              asChild
+            >
+              <Link to="/recurring-invoices">
+                <Repeat className="h-5 w-5 mr-2" />
+                Recurring Invoices
+              </Link>
+            </Button>
+
             <Button onClick={createNewInvoice}>
               <Plus className="h-5 w-5 mr-2" />
               Create New Invoice
             </Button>
           </div>
         </div>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>All Invoices</CardTitle>
@@ -310,8 +321,8 @@ const InvoicesList = () => {
                         <TableCell>{invoice.date ? format(new Date(invoice.date), 'MMM dd, yyyy') : 'N/A'}</TableCell>
                         <TableCell>{invoice.due_date ? format(new Date(invoice.due_date), 'MMM dd, yyyy') : 'N/A'}</TableCell>
                         <TableCell>
-                          {invoice.total_amount !== undefined 
-                            ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total_amount) 
+                          {invoice.total_amount !== undefined
+                            ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(invoice.total_amount)
                             : 'N/A'}
                         </TableCell>
                         <TableCell>
@@ -321,16 +332,16 @@ const InvoicesList = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => editInvoice(invoice.id)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              variant="outline"
+                              size="sm"
                               asChild
                             >
                               <Link to={`/invoice/${invoice.id}`}>

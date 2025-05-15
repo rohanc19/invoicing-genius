@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoicing Genius</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+            color: #333;
+        }
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #4f46e5;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        nav ul {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        nav ul li {
+            margin-left: 20px;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .card h2 {
+            margin-top: 0;
+            color: #4f46e5;
+        }
+        .button {
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .button:hover {
+            background-color: #4338ca;
+        }
+        .invoice-list {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table th, table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        table th {
+            background-color: #f1f5f9;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Invoicing Genius</div>
+        <nav>
+            <ul>
+                <li><a href="#dashboard">Dashboard</a></li>
+                <li><a href="#invoices">Invoices</a></li>
+                <li><a href="#clients">Clients</a></li>
+                <li><a href="#reports">Reports</a></li>
+                <li><a href="#settings">Settings</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="app-container">
+        <h1>Dashboard</h1>
+        
+        <div class="dashboard">
+            <div class="card">
+                <h2>Quick Actions</h2>
+                <p>Create and manage your invoices quickly.</p>
+                <a href="#new-invoice" class="button">New Invoice</a>
+            </div>
+            
+            <div class="card">
+                <h2>Recent Activity</h2>
+                <p>View your recent invoicing activity.</p>
+                <ul>
+                    <li>Invoice #1001 was paid</li>
+                    <li>New client added: ABC Corp</li>
+                    <li>Invoice #1002 was sent</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <h2>Outstanding Invoices</h2>
+                <p>You have 3 outstanding invoices.</p>
+                <a href="#outstanding" class="button">View All</a>
+            </div>
+            
+            <div class="card">
+                <h2>Monthly Revenue</h2>
+                <p>Your revenue this month: $5,240</p>
+                <div style="height: 100px; background-color: #f1f5f9; border-radius: 4px; margin-top: 10px; position: relative;">
+                    <div style="position: absolute; bottom: 0; width: 20%; height: 40%; background-color: #4f46e5; margin-left: 5%;"></div>
+                    <div style="position: absolute; bottom: 0; width: 20%; height: 60%; background-color: #4f46e5; margin-left: 30%;"></div>
+                    <div style="position: absolute; bottom: 0; width: 20%; height: 80%; background-color: #4f46e5; margin-left: 55%;"></div>
+                    <div style="position: absolute; bottom: 0; width: 20%; height: 50%; background-color: #4f46e5; margin-left: 80%;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="invoice-list">
+            <h2>Recent Invoices</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Client</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1001</td>
+                        <td>ABC Corporation</td>
+                        <td>$1,200.00</td>
+                        <td>2023-05-01</td>
+                        <td>Paid</td>
+                        <td><a href="#view">View</a></td>
+                    </tr>
+                    <tr>
+                        <td>1002</td>
+                        <td>XYZ Ltd</td>
+                        <td>$3,450.00</td>
+                        <td>2023-05-10</td>
+                        <td>Sent</td>
+                        <td><a href="#view">View</a></td>
+                    </tr>
+                    <tr>
+                        <td>1003</td>
+                        <td>Acme Inc</td>
+                        <td>$890.00</td>
+                        <td>2023-05-15</td>
+                        <td>Draft</td>
+                        <td><a href="#view">View</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Simple script to demonstrate functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click event listeners to navigation items
+            const navItems = document.querySelectorAll('nav ul li a');
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    alert('Navigation to: ' + this.textContent);
+                });
+            });
+            
+            // Add click event listener to the New Invoice button
+            const newInvoiceButton = document.querySelector('a[href="#new-invoice"]');
+            if (newInvoiceButton) {
+                newInvoiceButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    alert('Creating a new invoice...');
+                });
+            }
+            
+            // Check if Electron API is available
+            if (window.electron) {
+                console.log('Electron API is available in the custom index page');
+            } else {
+                console.log('Electron API is not available in the custom index page');
+            }
+        });
+    </script>
+</body>
+</html>

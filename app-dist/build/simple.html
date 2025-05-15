@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Invoicing Genius Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background-color: #f0f4f8;
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #4f46e5;
+        }
+        button {
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #4338ca;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Invoicing Genius</h1>
+        <p>This is a simple test page to verify that the Electron app is working correctly.</p>
+
+        <div>
+            <button id="test-button">Click Me</button>
+            <button id="load-main">Load Main App</button>
+            <button id="load-custom">Load Custom App</button>
+        </div>
+
+        <div id="result" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const testButton = document.getElementById('test-button');
+            const loadMainButton = document.getElementById('load-main');
+            const resultDiv = document.getElementById('result');
+
+            testButton.addEventListener('click', function() {
+                resultDiv.innerHTML = '<p class="success">Button clicked successfully! JavaScript is working.</p>';
+
+                // Check if Electron API is available
+                if (window.electron) {
+                    resultDiv.innerHTML += '<p class="success">Electron API is available!</p>';
+                } else {
+                    resultDiv.innerHTML += '<p class="error">Electron API is not available.</p>';
+                }
+            });
+
+            loadMainButton.addEventListener('click', function() {
+                window.location.href = 'index.html';
+            });
+
+            const loadCustomButton = document.getElementById('load-custom');
+            loadCustomButton.addEventListener('click', function() {
+                window.location.href = 'custom-index.html';
+            });
+        });
+    </script>
+</body>
+</html>
