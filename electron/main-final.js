@@ -204,9 +204,28 @@ ipcMain.handle('show-open-dialog', async (event, options) => {
 // Handle file save
 ipcMain.handle('save-file', async (event, { filePath, data }) => {
   try {
-    fs.writeFileSync(filePath, data);
-    return { success: true };
+    // Create directory if it doesn't exist
+    const dirPath = path.dirname(filePath);
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+
+    // Check if data is base64 encoded
+    if (typeof data === 'string' && data.includes(';base64,')) {
+      // Extract base64 data
+      const base64Data = data.split(';base64,').pop();
+      fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
+    } else if (typeof data === 'string' && /^[A-Za-z0-9+/=]+$/.test(data)) {
+      // Directly decode base64 string
+      fs.writeFileSync(filePath, Buffer.from(data, 'base64'));
+    } else {
+      // Regular string data
+      fs.writeFileSync(filePath, data);
+    }
+
+    return { success: true, filePath };
   } catch (error) {
+    console.error('Error saving file:', error);
     return { success: false, error: error.message };
   }
 });
@@ -214,9 +233,55 @@ ipcMain.handle('save-file', async (event, { filePath, data }) => {
 // Handle file read
 ipcMain.handle('read-file', async (event, { filePath }) => {
   try {
-    const data = fs.readFileSync(filePath, 'utf8');
-    return { success: true, data };
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return { success: false, error: 'File not found' };
+    }
+
+    // Read file as buffer
+    const buffer = fs.readFileSync(filePath);
+
+    // Convert to base64 for transfer
+    const data = buffer.toString('base64');
+
+    return {
+      success: true,
+      data,
+      filePath,
+      size: buffer.length,
+      lastModified: fs.statSync(filePath).mtime.getTime()
+    };
   } catch (error) {
+    console.error('Error reading file:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Handle file delete
+ipcMain.handle('delete-file', async (event, { filePath }) => {
+  try {
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return { success: false, error: 'File not found' };
+    }
+
+    // Delete the file
+    fs.unlinkSync(filePath);
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Get app path
+ipcMain.handle('get-app-path', async (event) => {
+  try {
+    const userDataPath = app.getPath('userData');
+    return { success: true, path: userDataPath };
+  } catch (error) {
+    console.error('Error getting app path:', error);
     return { success: false, error: error.message };
   }
 });

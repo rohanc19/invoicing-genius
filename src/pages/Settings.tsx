@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Bell, 
-  HardDrive, 
-  Laptop, 
-  LayoutDashboard, 
-  RefreshCw, 
-  Settings as SettingsIcon, 
-  Smartphone, 
-  User 
+import {
+  Bell,
+  HardDrive,
+  Laptop,
+  LayoutDashboard,
+  RefreshCw,
+  Settings as SettingsIcon,
+  Smartphone,
+  User,
+  FileText
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -19,6 +20,7 @@ import ProfileSettings from '@/components/ProfileSettings';
 import NotificationSettings from '@/components/NotificationSettings';
 import BackupRestoreManager from '@/components/BackupRestoreManager';
 import ConflictResolutionDialog from '@/components/ConflictResolutionDialog';
+import FileStorageDemo from '@/components/FileStorageDemo';
 import { getUnresolvedConflicts } from '@/utils/conflictResolution';
 import { syncPendingChanges } from '@/utils/offlineSync';
 
@@ -35,15 +37,15 @@ const Settings: React.FC = () => {
     try {
       const conflicts = await getUnresolvedConflicts();
       setConflictsCount(conflicts.length);
-      
+
       if (conflicts.length > 0) {
         toast({
           title: 'Data Conflicts Detected',
           description: `You have ${conflicts.length} unresolved data conflicts.`,
           action: (
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setShowConflictDialog(true)}
               className="bg-white"
             >
@@ -74,14 +76,14 @@ const Settings: React.FC = () => {
     try {
       await syncPendingChanges();
       await checkConflicts();
-      
+
       toast({
         title: 'Sync Complete',
         description: 'Your data has been synchronized successfully.',
       });
     } catch (error) {
       console.error('Error syncing data:', error);
-      
+
       toast({
         title: 'Sync Failed',
         description: 'There was an error synchronizing your data.',
@@ -95,7 +97,7 @@ const Settings: React.FC = () => {
   // Handle tab change
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    
+
     // Check for conflicts when switching to sync tab
     if (value === 'sync') {
       checkConflicts();
@@ -129,7 +131,7 @@ const Settings: React.FC = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="grid grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-5 w-full">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="h-4 w-4" />
               Profile
@@ -141,6 +143,10 @@ const Settings: React.FC = () => {
             <TabsTrigger value="backup" className="flex items-center gap-2">
               <HardDrive className="h-4 w-4" />
               Backup & Restore
+            </TabsTrigger>
+            <TabsTrigger value="files" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Files
             </TabsTrigger>
             <TabsTrigger value="sync" className="flex items-center gap-2">
               <RefreshCw className="h-4 w-4" />
@@ -165,6 +171,10 @@ const Settings: React.FC = () => {
             <BackupRestoreManager />
           </TabsContent>
 
+          <TabsContent value="files" className="space-y-6">
+            <FileStorageDemo />
+          </TabsContent>
+
           <TabsContent value="sync" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white rounded-lg border shadow-sm p-6">
@@ -179,12 +189,12 @@ const Settings: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                
+
                 <p className="text-sm mb-4">
                   Download the desktop application for a native experience on your computer.
                   All your data will sync automatically between devices.
                 </p>
-                
+
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" className="gap-2">
                     <LayoutDashboard className="h-4 w-4" />
@@ -200,7 +210,7 @@ const Settings: React.FC = () => {
                   </Button>
                 </div>
               </div>
-              
+
               <div className="bg-white rounded-lg border shadow-sm p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="bg-primary/10 p-2 rounded-full">
@@ -213,12 +223,12 @@ const Settings: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                
+
                 <p className="text-sm mb-4">
                   Download the mobile application to create and manage invoices on the go.
                   All your data will sync automatically between devices.
                 </p>
-                
+
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" className="gap-2">
                     <Smartphone className="h-4 w-4" />
@@ -230,7 +240,7 @@ const Settings: React.FC = () => {
                   </Button>
                 </div>
               </div>
-              
+
               <div className="bg-white rounded-lg border shadow-sm p-6 md:col-span-2">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="bg-primary/10 p-2 rounded-full">
@@ -243,7 +253,7 @@ const Settings: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <div>
@@ -261,7 +271,7 @@ const Settings: React.FC = () => {
                       {isSyncing ? 'Syncing...' : 'Sync Now'}
                     </Button>
                   </div>
-                  
+
                   {conflictsCount > 0 && (
                     <div className="flex justify-between items-center p-4 bg-amber-50 border border-amber-200 rounded-md">
                       <div>
@@ -285,11 +295,11 @@ const Settings: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
-      
+
       {/* Conflict Resolution Dialog */}
-      <ConflictResolutionDialog 
-        open={showConflictDialog} 
-        onOpenChange={setShowConflictDialog} 
+      <ConflictResolutionDialog
+        open={showConflictDialog}
+        onOpenChange={setShowConflictDialog}
       />
     </DashboardLayout>
   );

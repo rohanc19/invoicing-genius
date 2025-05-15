@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld(
     showOpenDialog: (options) => ipcRenderer.invoke('show-open-dialog', options),
     saveFile: (filePath, data) => ipcRenderer.invoke('save-file', { filePath, data }),
     readFile: (filePath) => ipcRenderer.invoke('read-file', { filePath }),
+    deleteFile: (filePath) => ipcRenderer.invoke('delete-file', { filePath }),
+    getAppPath: () => ipcRenderer.invoke('get-app-path'),
 
     // App menu events
     onMenuExportData: (callback) => ipcRenderer.on('menu-export-data', callback),
@@ -26,7 +28,10 @@ contextBridge.exposeInMainWorld(
     // Remove event listeners
     removeAllListeners: (channel) => {
       ipcRenderer.removeAllListeners(channel);
-    }
+    },
+
+    // Flag to identify Electron environment
+    isElectron: true
   }
 );
 

@@ -1,6 +1,12 @@
-const { spawn } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { spawn } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import readline from 'readline';
+
+// Get the directory name
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ANSI color codes for terminal output
 const colors = {
@@ -23,18 +29,18 @@ function log(message) {
 function checkFirebaseCLI() {
   return new Promise((resolve) => {
     const firebase = spawn('firebase', ['--version']);
-    
+
     firebase.stdout.on('data', (data) => {
       const version = data.toString().trim();
       log(`${colors.green}Firebase CLI version: ${version}${colors.reset}`);
       resolve(true);
     });
-    
+
     firebase.stderr.on('data', () => {
       log(`${colors.red}Firebase CLI not found. Please install it with: npm install -g firebase-tools${colors.reset}`);
       resolve(false);
     });
-    
+
     firebase.on('error', () => {
       log(`${colors.red}Firebase CLI not found. Please install it with: npm install -g firebase-tools${colors.reset}`);
       resolve(false);
@@ -72,9 +78,9 @@ function checkFirebaseProject() {
 function initializeFirebaseProject() {
   return new Promise((resolve) => {
     log(`${colors.cyan}Initializing Firebase project...${colors.reset}`);
-    
+
     const firebase = spawn('firebase', ['init'], { stdio: 'inherit' });
-    
+
     firebase.on('close', (code) => {
       if (code === 0) {
         log(`${colors.green}Firebase project initialized successfully${colors.reset}`);
@@ -84,7 +90,7 @@ function initializeFirebaseProject() {
         resolve(false);
       }
     });
-    
+
     firebase.on('error', (error) => {
       log(`${colors.red}Error initializing Firebase project: ${error.message}${colors.reset}`);
       resolve(false);
@@ -96,9 +102,9 @@ function initializeFirebaseProject() {
 function deployFirebaseProject() {
   return new Promise((resolve) => {
     log(`${colors.cyan}Deploying Firebase project...${colors.reset}`);
-    
+
     const firebase = spawn('firebase', ['deploy'], { stdio: 'inherit' });
-    
+
     firebase.on('close', (code) => {
       if (code === 0) {
         log(`${colors.green}Firebase project deployed successfully${colors.reset}`);
@@ -108,7 +114,7 @@ function deployFirebaseProject() {
         resolve(false);
       }
     });
-    
+
     firebase.on('error', (error) => {
       log(`${colors.red}Error deploying Firebase project: ${error.message}${colors.reset}`);
       resolve(false);
@@ -120,9 +126,9 @@ function deployFirebaseProject() {
 function startFirebaseEmulators() {
   return new Promise((resolve) => {
     log(`${colors.cyan}Starting Firebase emulators...${colors.reset}`);
-    
+
     const firebase = spawn('firebase', ['emulators:start'], { stdio: 'inherit' });
-    
+
     firebase.on('close', (code) => {
       if (code === 0) {
         log(`${colors.green}Firebase emulators stopped${colors.reset}`);
@@ -131,12 +137,12 @@ function startFirebaseEmulators() {
       }
       resolve(false);
     });
-    
+
     firebase.on('error', (error) => {
       log(`${colors.red}Error starting Firebase emulators: ${error.message}${colors.reset}`);
       resolve(false);
     });
-    
+
     // This will keep the emulators running until the process is terminated
     resolve(true);
   });
@@ -145,14 +151,14 @@ function startFirebaseEmulators() {
 // Main function
 async function main() {
   log(`${colors.blue}Initializing Firebase for Invoicing Genius...${colors.reset}`);
-  
+
   // Check Firebase CLI
   const hasCLI = await checkFirebaseCLI();
   if (!hasCLI) {
     log(`${colors.yellow}Please install Firebase CLI and try again${colors.reset}`);
     return;
   }
-  
+
   // Check Firebase project
   const hasProject = await checkFirebaseProject();
   if (!hasProject) {
@@ -163,22 +169,22 @@ async function main() {
       return;
     }
   }
-  
+
   // Ask user what they want to do
   console.log('\n');
   console.log(`${colors.cyan}What would you like to do?${colors.reset}`);
   console.log(`${colors.cyan}1. Start Firebase emulators${colors.reset}`);
   console.log(`${colors.cyan}2. Deploy Firebase project${colors.reset}`);
   console.log(`${colors.cyan}3. Exit${colors.reset}`);
-  
-  const readline = require('readline').createInterface({
+
+  const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
   });
-  
-  readline.question(`${colors.cyan}Enter your choice (1-3): ${colors.reset}`, async (choice) => {
-    readline.close();
-    
+
+  rl.question(`${colors.cyan}Enter your choice (1-3): ${colors.reset}`, async (choice) => {
+    rl.close();
+
     switch (choice) {
       case '1':
         await startFirebaseEmulators();
