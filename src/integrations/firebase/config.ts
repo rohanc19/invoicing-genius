@@ -6,12 +6,12 @@ import { getStorage, connectStorageEmulator } from "firebase/storage";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", // Replace with your actual API key
+  apiKey: "AIzaSyCYdWOns1zH2zxHIcJ9TM4Wgh5_rMvu-6U",
   authDomain: "invoicing-genius-9bf2a.firebaseapp.com",
   projectId: "invoicing-genius-9bf2a",
   storageBucket: "invoicing-genius-9bf2a.appspot.com",
-  messagingSenderId: "XXXXXXXXXXXX", // Replace with your actual Messaging Sender ID
-  appId: "1:XXXXXXXXXXXX:web:XXXXXXXXXXXXXXXXXXXX" // Replace with your actual App ID
+  messagingSenderId: "1015184244598", // You may need to update this with your actual Messaging Sender ID
+  appId: "1:1015184244598:web:a9e5c8b0e7c8f3a5f3c8d9" // You may need to update this with your actual App ID
 };
 
 // Initialize Firebase
